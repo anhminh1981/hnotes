@@ -6,3 +6,13 @@ target
 /.project
 /.settings
 /RUNNING_PID
+/bin/
+
+.cache-main
+.cache-tests
+.sbtserver
+.worksheet
+*.lock
+/hnotes-shell
+
+project/eclipse.sbt
