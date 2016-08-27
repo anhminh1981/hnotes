@@ -24,9 +24,9 @@ class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(query.result )
   }
 
-  def insert(user: User): Future[Unit] = {
+  def insert(user: User): Future[User] = {
     Logger.debug("Inserting " + user)
-    db.run(Users += user).map { _ => () }
+    db.run((Users returning Users.map(_.id) )+= user).map { User(_, user.email, user.password, user.role) }
   }
 
   private class UsersTable(tag: Tag) extends Table[User](tag, "USER") {

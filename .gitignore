@@ -16,3 +16,4 @@ target
 /hnotes-shell
 
 project/eclipse.sbt
+*.sc
