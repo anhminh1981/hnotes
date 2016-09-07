@@ -1,1 +1,10 @@
 /* Empty. Add your own CSS if you like */
+
+input.ng-invalid-compare-to:not(.ng-pristine) {
+        border: 1px solid red;
+      }
+
+.errorMessage p { 
+	color: red;
+	font-weight: bold;
+}

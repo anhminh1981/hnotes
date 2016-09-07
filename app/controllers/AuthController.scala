@@ -7,11 +7,13 @@ import play.api.mvc.BodyParsers.parse
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import dao.UserDao
 import models.User
-import play.api.libs.json.Json
+
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
+
 import java.util.Calendar
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtJson
-import play.api.libs.json.JsString
 import org.joda.time.DateTime
 import org.joda.time.Instant
 import com.github.t3hnar.bcrypt._
@@ -21,17 +23,14 @@ import com.github.t3hnar.bcrypt._
 class AuthController @Inject() (userDao: UserDao, configuration: play.api.Configuration) (implicit ec: ExecutionContext) extends Controller {
   val signupSuccess = Json.obj("request" -> "signup", "status" -> "OK")
   val signupFailure = Json.obj("request" -> "signup", "status" -> "KO")
+  val loginSuccess = Json.obj("request" -> "login", "status" -> "OK")
+  val loginFailure = Json.obj("request" -> "login", "status" -> "KO")
+  
+  implicit val userWrites: Writes[User] = ( 
+    (JsPath \ "email").write[String] and (JsPath \ "role").write[String]
+  )(user => (user.email, user.role))
+  
   val secretOption = configuration.getString("play.crypto.secret")
-  
-  def signup = commonNeedPasswordAndEmail { (email, password) => 
-    val futureResult = for(
-		  x <- userDao.selectByEmail(email ) if x.isEmpty;
-		  y <- userDao.insert(User(0, email, password.bcrypt, "user")) 
-		  )  yield Ok(signupSuccess + ("token" -> JsString(createToken(y))) )
-		  futureResult fallbackTo(Future.successful(Ok(signupFailure + ("cause" -> JsString("email already registered")))))
-  }
-
-  
   
   private def commonNeedPasswordAndEmail(f: (String, String) => Future[Result]) = Action.async(parse.json) { 
 		implicit request => {
@@ -46,22 +45,42 @@ class AuthController @Inject() (userDao: UserDao, configuration: play.api.Config
 			}
 		}
   }
-    
-    
-  def createToken(user: User) = { secretOption match { 
-  case Some(secret) => val now = Instant.now()
   
-		  val claim = Json.obj("iat" -> now.getMillis, "iss" -> "hnotes", "email" -> user.email, "role" -> user.role)
+  
+  def signup = commonNeedPasswordAndEmail { (email, password) => 
+    val futureResult = for(
+		  existingUser <- userDao.selectByEmail(email ) if existingUser.isEmpty;
+		  newUser <- userDao.insert(User(0, email, password.bcrypt, "user")) 
+		  )  yield Ok(signupSuccess + ("token" -> JsString(createToken(newUser))) + ("user" -> Json.toJson(newUser)))
+		  futureResult fallbackTo(Future.successful(Ok(signupFailure + ("cause" -> JsString("email already registered")))))
+  }
 
-		  val algo = JwtAlgorithm.HS256
-		  JwtJson.encode(claim, secret, algo)
-  case None => throw new IllegalStateException("The application must have a secret")
-  }
+    
+  def createToken(user: User) = { 
+	  secretOption match { 
+	  case Some(secret) => val now = Instant.now()
+
+			  val claim = Json.obj("iat" -> now.getMillis, "iss" -> "hnotes", "email" -> user.email, "role" -> user.role)
+
+			  val algo = JwtAlgorithm.HS256
+			  JwtJson.encode(claim, secret, algo)
+	  case None => throw new IllegalStateException("The application must have a secret")
+	  }
   }
   
   
-	def login = Action.async {
-		Future.successful(Ok("login"))
-	}
+  def login = commonNeedPasswordAndEmail { (email, password) => 
+    val userFuture = userDao.selectByEmail(email )
+    userFuture map { 
+      case None => Ok(loginFailure + ("cause" -> JsString("email not found")))
+      case Some(user) => 
+        if(password.isBcrypted(user.password)) {
+          val userJson = Json.toJson(user)
+        	Ok(loginSuccess + ("token" -> JsString(createToken(user))) + ("user" -> userJson)) 
+        } else
+        	Ok(loginFailure + ("cause" -> JsString("wrong password")))
+      
+    }
+  }
 
 }

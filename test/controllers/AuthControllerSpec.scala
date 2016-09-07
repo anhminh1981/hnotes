@@ -30,12 +30,12 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
   val email = "test@test.test"
   val password = "password"
   val role = "user"
-  val user = User(0, email, password, role)
+  val user = User(0, email, password.bcrypt, role)
   //Mocking the secret
   val secret = "changeme"
   val config = mock[Configuration]
   
-  var userDao = mock[UserDao]
+  var userDao = null: UserDao
   var controller = new AuthController(userDao, config)
   
   override def beforeEach() = { 
@@ -86,7 +86,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       val BAD_REQUEST_CODE = 400
       result.onComplete { 
-        case Success(r ) => r.header.status must be (BAD_REQUEST_CODE)
+        case Success(r) => r.header.status must be (BAD_REQUEST_CODE)
         case Failure(e) => fail 
         }
     }
@@ -95,7 +95,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     "register a new user" in { 
     	when(config.getString("play.crypto.secret")) thenReturn Some(secret)
 
-    	when(userDao.selectByEmail(email)) thenReturn Future.successful(Seq()) 
+    	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
     	when(userDao.insert(any[User])) thenReturn Future.successful(user)
 
     	
@@ -122,7 +122,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "not register a user twice" in { 
-    	when(userDao.selectByEmail(email)) thenReturn Future.successful(Seq(user))
+    	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user))
       
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
@@ -144,6 +144,94 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       (json \ "token").asOpt[String] mustBe None
     }  
       
+  }
+  
+  
+  "login" should {
+    
+    "need an email" in { 
+      val requestBody = Json.obj( "password" -> password )
+      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+          body =  requestBody )
+  
+      
+      val result = controller.signup().apply(request)
+      
+      val BAD_REQUEST_CODE = 400
+      result.onComplete { 
+        case Success(r) => r.header.status must be (BAD_REQUEST_CODE)
+        case Failure(e) => fail 
+        }
+    }
+    
+    "login if the email/password pair is correct" in { 
+      when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+
+    	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user)) 
+    	
+      val requestBody = Json.obj( "email" -> email, "password" -> password )
+      
+      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+          body =  requestBody )
+  
+      val result = controller.login().apply(request)
+      
+      val json = contentAsJson(result)
+      
+      verify(userDao).selectByEmail(email)
+      
+      (json \ "request").asOpt[String] mustBe Some( "login" )
+      (json \ "status").asOpt[String] mustBe Some("OK")
+      (json \ "token").as[String] mustNot be(empty)
+      (json \ "user" \ "email").asOpt[String] mustBe Some(email)
+      (json \ "user" \ "role").asOpt[String] mustBe Some(role)
+      
+    }
+    
+    "check the email's existence" in {
+      when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+
+    	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
+    	
+      val requestBody = Json.obj( "email" -> email, "password" -> password )
+      
+      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+          body =  requestBody )
+  
+      val result = controller.login().apply(request)
+      
+      val json = contentAsJson(result)
+      
+      verify(userDao).selectByEmail(email)
+      
+      (json \ "request").asOpt[String] mustBe Some( "login" )
+      (json \ "status").asOpt[String] mustBe Some("KO")
+      (json \ "token").asOpt[String] mustBe None
+      (json \ "cause").asOpt[String] mustBe Some("email not found")
+    }
+    
+    "check the password" in {
+      when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+
+    	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user)) 
+    	
+      val requestBody = Json.obj( "email" -> email, "password" -> "not_password" )
+      
+      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+          body =  requestBody )
+  
+      val result = controller.login().apply(request)
+      
+      val json = contentAsJson(result)
+      
+      verify(userDao).selectByEmail(email)
+      
+      (json \ "request").asOpt[String] mustBe Some( "login" )
+      (json \ "status").asOpt[String] mustBe Some("KO")
+      (json \ "token").asOpt[String] mustBe None
+      (json \ "cause").asOpt[String] mustBe Some("wrong password")
+    }
+    
   }
   
   

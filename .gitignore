@@ -17,3 +17,6 @@ target
 
 project/eclipse.sbt
 *.sc
+*.project
+
+.settings
