@@ -1,10 +1,4 @@
-//Ionic Starter App
-
-//angular.module is a global place for creating, registering and retrieving Angular modules
-//'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
-//the 2nd parameter is an array of 'requires'
-//'starter.controllers' is found in controllers.js
-angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnotes.auth'])
+angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnotes.filters', 'hnotes.auth'])
 
 .run(function($ionicPlatform, $rootScope, $window, $state, $location, SERVER_URL) {
 
@@ -24,19 +18,19 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 			StatusBar.styleDefault();
 		}
 	});
-	
-	
-	// Re-route to welcome street if we don't have an authenticated token
-    $rootScope.$on('$stateChangeStart', function(event, toState) {
-        if (toState.name !== 'auth' && toState.name !== 'app.logout' && !$window.localStorage.token) {
-            console.log('Aborting state ' + toState.name + ': No token');
-            event.preventDefault();
-            $state.go('auth')
-        }
-    });
 
-    $state.go('app.playlists');
-	
+
+	// Re-route to welcome street if we don't have an authenticated token
+	$rootScope.$on('$stateChangeStart', function(event, toState) {
+		if (toState.name !== 'auth' && toState.name !== 'app.logout' && !$window.localStorage.token) {
+			console.log('Aborting state ' + toState.name + ': No token');
+			event.preventDefault();
+			$state.go('auth')
+		}
+	});
+
+	$state.go('app.playlists');
+
 })
 
 .config(function($stateProvider, $urlRouterProvider) {
@@ -85,11 +79,10 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 			}
 		}
 	});
-	
-	
-	
+
+
+
 	// if none of the above states are matched, use this as the fallback
 	$urlRouterProvider.otherwise('/app/playlists');
 } )
-
 ;

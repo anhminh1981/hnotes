@@ -17,3 +17,5 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 # Authentification controller
 POST    /signup                     controllers.AuthController.signup()
 POST    /login                      controllers.AuthController.login()
+
+GET	/test							controllers.AuthController.test()
