@@ -29,47 +29,45 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
   val email = "test@test.test"
   val password = "password"
   val role = "user"
-  val user = User(0, email, password.bcrypt, role)
+  val user = User(2, email, password.bcrypt, role)
   //Mocking the secret
   private val secret = "changeme"
   
-  private val config = mock[Configuration]
+  private implicit val configuration = mock[Configuration]
   
   
   private var userDao = null: UserDao
   private var controller = null: AuthController
   
   override def beforeEach() = { 
-    when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+    when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
     userDao = mock[UserDao]
-    controller = new AuthController(userDao, config, null)
+    controller = new AuthController(userDao)
   }
   
   "createToken" must { 
     "create a token if there's a secret" in { 
       
-      
-      
       // Mocking the time
       val provider = mock[DateTimeUtils.MillisProvider]
-      when(provider.getMillis) thenReturn 1472289657315L
+      when(provider.getMillis) thenReturn 1473874241026L
       DateTimeUtils.setCurrentMillisProvider(provider)
       // Expected result
       val header = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
-      val claim = "eyJpYXQiOjE0NzIyODk2NTczMTUsImlzcyI6Imhub3RlcyIsImVtYWlsIjoidGVzdEB0ZXN0LnRlc3QiLCJyb2xlIjoidXNlciJ9"
-      val signature = "vOVqafgoAtF_vGHBE1Hlg00Zy91tvwhBwNJY0eOnkwk"
+      val claim = "eyJpYXQiOjE0NzM4NzQyNDEwMjYsImlzcyI6Imhub3RlcyIsInVzZXJJZCI6Miwicm9sZSI6InVzZXIifQ"
+      val signature = "kHOkwcTWLOOikw4PQ0XkD7cUHbb7otiIvV_td1wTnVs"
       
       // Running the method
       val token = controller.createToken(user) 
       
       // Result
       token must equal(s"$header.$claim.$signature")
-      verify(config, atLeastOnce()).getString("play.crypto.secret")
+      verify(configuration, atLeastOnce()).getString("play.crypto.secret")
     }
     
     "throw an exception if the secret's not configured" in {
-      when(config.getString("play.crypto.secret")) thenReturn None
-      an [IllegalStateException] must be thrownBy controller.createToken(User(1, "test@test.test", "password", "user")) 
+      when(configuration.getString("play.crypto.secret")) thenReturn None
+      an [IllegalStateException] must be thrownBy controller.createToken(user) 
     }
   }
   
@@ -92,7 +90,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     
     
     "register a new user" in { 
-    	when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+    	when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
     	when(userDao.insert(any[User])) thenReturn Future.successful(user)
@@ -163,7 +161,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "login if the email/password pair is correct" in { 
-      when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+      when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user)) 
     	
@@ -187,7 +185,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "check the email's existence" in {
-      when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+      when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
     	
@@ -209,7 +207,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "check the password" in {
-      when(config.getString("play.crypto.secret")) thenReturn Some(secret)
+      when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user)) 
     	

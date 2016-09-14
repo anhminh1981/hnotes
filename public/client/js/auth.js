@@ -1,4 +1,4 @@
-angular.module('hnotes.auth', [])
+angular.module('hnotes.auth', ['hnotes.config'])
 	.config(function ($stateProvider) {
 		$stateProvider
 			.state('auth', {
@@ -7,12 +7,13 @@ angular.module('hnotes.auth', [])
 				controller: 'AuthCtrl'
 			}) 
 	})
-	.factory('Auth', function($http, $window, $rootScope) {
+	.factory('Auth', function($http, $window, $rootScope, SERVER_URL) {
 		var loggedIn = function(response) {
+			console.log(JSON.stringify(response))
 			if(response.data.status == 'OK') {
-				$window.localStorage.token =  response.token 
-				$rootScope.user = response.user
-				$window.localStorage.user = JSON.stringify(response.user) 
+				$window.localStorage.token =  response.data.token 
+				$rootScope.user = response.data.user
+				$window.localStorage.user = JSON.stringify(response.data.user) 
 			}
 			return response.data
 			
@@ -23,20 +24,20 @@ angular.module('hnotes.auth', [])
 		}
 		return {
 			login: function(loginData) { 
-				return $http.post($rootScope.server + '/login', loginData).then(loggedIn, errLogin)
+				return $http.post(SERVER_URL + '/login', loginData).then(loggedIn, errLogin)
 			},
 			signup: function(signupData) { 
-				return $http.post($rootScope.server + '/signup', signupData).then(loggedIn, errLogin)
+				return $http.post(SERVER_URL + '/signup', signupData).then(loggedIn, errLogin)
 			}
 		} 
 	})
-	.controller('AuthCtrl', function($scope, $rootScope, $state, Auth) {
+	.controller('AuthCtrl', function($scope, $state, Auth) {
 		$scope.doLogin = function(loginData) { 
 			Auth.login(loginData).then(function(result) { 
 				if(result.status == 'KO') { 
 					$scope.signupError = result.cause;
 				} else { 
-					$state.go('app.playlists');
+					$state.go('app.notes');
 				}
 			})
 		}
@@ -46,7 +47,7 @@ angular.module('hnotes.auth', [])
 				if(result.status == 'KO') { 
 					$scope.signupError = result.cause;
 				} else { 
-					$state.go('app.playlists');
+					$state.go('app.notes');
 				}
 			})
 		}

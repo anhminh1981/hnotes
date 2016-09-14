@@ -5,9 +5,11 @@ import play.api._
 import play.api.mvc._
 import play.api.mvc.BodyParsers.parse
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import dao.UserDao
 import models.User
 
+import play.api.Configuration
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -18,10 +20,13 @@ import org.joda.time.DateTime
 import org.joda.time.Instant
 import com.github.t3hnar.bcrypt._
 import com.google.inject.ImplementedBy
+import play.api.mvc.Security.AuthenticatedBuilder
+import play.api.mvc.RequestHeader
+import play.api.mvc.Security.AuthenticatedRequest
 
 
 @Singleton
-class AuthController @Inject() (userDao: UserDao, configuration: play.api.Configuration, secured: Secured) (implicit ec: ExecutionContext) extends Controller  {
+class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration) extends Controller with Secured {
   val signupSuccess = Json.obj("request" -> "signup", "status" -> "OK")
   val signupFailure = Json.obj("request" -> "signup", "status" -> "KO")
   val loginSuccess = Json.obj("request" -> "login", "status" -> "OK")
@@ -60,8 +65,9 @@ class AuthController @Inject() (userDao: UserDao, configuration: play.api.Config
     if(user.isDefined) 
   	  Future.successful(Ok(signupFailure + ("cause" -> JsString("email already registered")) )) 
   	  else {
-  		  val newUser = userDao.insert(User(0, email, password.bcrypt, "user")) 
-  				  newUser map { user2 => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))}
+  		  val newUser = userDao.insert(User(0, email, password.bcrypt, "user"))
+  		  Logger.debug("new user: " + newUser)
+  		  newUser map { user2 => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))}
   	  }
     }
 
@@ -72,7 +78,7 @@ class AuthController @Inject() (userDao: UserDao, configuration: play.api.Config
 	  secretOption match { 
 	  case Some(secret) => val now = Instant.now()
 
-			  val claim = Json.obj("iat" -> now.getMillis , "iss" -> "hnotes", "email" -> user.email, "role" -> user.role)
+			  val claim = Json.obj("iat" -> now.getMillis , "iss" -> "hnotes", "userId" -> user.id, "role" -> user.role)
 
 			  
 			  JwtJson.encode(claim, secret, AuthConstants.algo)
@@ -96,7 +102,7 @@ class AuthController @Inject() (userDao: UserDao, configuration: play.api.Config
     }
   }
   
-  def test = secured.secure { implicit request =>
+  def test = Authenticated { implicit request =>
     Logger.debug(request.user.toString())
     Ok("ok")
   }
@@ -113,31 +119,24 @@ class UserRequest[A](val user: Option[User], request: Request[A]) extends Wrappe
 
 
 
-class Secured @Inject() ( configuration: play.api.Configuration) { 
-	val secretOption = configuration.getString("play.crypto.secret")
-	object UserAction extends
-			ActionBuilder[UserRequest] with ActionTransformer[Request, UserRequest] {
-
-		def transform[A](request: Request[A]) = Future.successful {
-			val user = for(token <- request.headers.get("authorization");
-					secret <- secretOption;
-					claim <- JwtJson.decodeJson(token, secret, Seq(AuthConstants.algo)).toOption;
-					iat <- (claim \ "iat").asOpt[Long] if  Instant.now().getMillis < iat + AuthConstants.duration ) 
-				yield User(0, (claim \ "email").as[String], null, (claim \ "role").as[String])
 
 
-				new UserRequest(user, request)
-		}
+trait Secured  {
+  implicit val configuration: Configuration
+  
+	private lazy val secretOption = configuration.getString("play.crypto.secret")
+	
+	
+	
+	def getUserFromRequest[A](requestHeader: RequestHeader) = {
+		for(token <- requestHeader.headers.get("authorization");
+				secret <- secretOption;
+				claim <- JwtJson.decodeJson(token, secret, Seq(AuthConstants.algo)).toOption if(claim \ "iss").asOpt[String] == Some("hnotes");
+				iat <- (claim \ "iat").asOpt[Long] if  Instant.now().getMillis < iat + AuthConstants.duration ) 
+			yield User((claim \ "userId").as[Long], null, null, (claim \ "role").as[String])
 	}
-
-	object PermissionCheckAction extends ActionFilter[UserRequest] {
-		def filter[A](request: UserRequest[A]) = Future.successful {
-			if (request.user.isEmpty)
-				Some(Results.Unauthorized)
-		  else
-				None
-		}
-	}
-
-	def secure = UserAction andThen PermissionCheckAction
+  
+	object Authenticated extends AuthenticatedBuilder(getUserFromRequest, _ => Results.Unauthorized)
+	
+	type UserRequest[A] = AuthenticatedRequest[A, User]
 }
