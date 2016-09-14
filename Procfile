@@ -1,0 +1,1 @@
+web: target/universal/stage/bin/hnotes -Dhttp.port=${PORT} -Dconfig.resource=test.conf
