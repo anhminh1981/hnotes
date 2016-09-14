@@ -1,4 +1,4 @@
-# Users schema
+# Users and Notes schema
 
 # --- !Ups
 
