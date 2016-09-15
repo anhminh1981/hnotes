@@ -4,6 +4,7 @@ import play.api.http.HttpFilters
 import play.api.mvc._
 
 import filters.TLSFilter
+import filters.HeadersFilter
 
 /**
  * This class configures filters that run on every request. This
@@ -21,7 +22,7 @@ import filters.TLSFilter
 @Singleton
 class Filters @Inject() (
   env: Environment,
-  tlsFilter: TLSFilter) extends HttpFilters {
+  tlsFilter: TLSFilter, headersFilter: HeadersFilter) extends HttpFilters {
 
   override val filters = {
     // Use the example filter if we're running development mode. If
@@ -30,7 +31,7 @@ class Filters @Inject() (
     if (env.mode == Mode.Dev) 
       Seq.empty 
     else 
-      Seq(tlsFilter)
+      Seq(headersFilter)
   }
 
 }
