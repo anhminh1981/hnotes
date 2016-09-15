@@ -20,3 +20,4 @@ project/eclipse.sbt
 *.project
 
 .settings
+.history

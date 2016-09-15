@@ -21,4 +21,10 @@ libraryDependencies ++= Seq(
 )
 
 
+sources in EditSource <++= baseDirectory.map(d => (d / "conf" ** "config.js").get)
+targetDirectory in EditSource <<= baseDirectory(_ / "public" / "client" / "js")
+flatten in EditSource := true
+
+(compile in Compile) <<= (compile in Compile) dependsOn (edit in EditSource)
+
 fork in run := true
