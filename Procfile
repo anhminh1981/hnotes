@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/hnotes -Dhttp.port=${PORT} -Dconfig.resource=test.conf
+web: target/universal/stage/bin/hnotes -Dhttp.port=${PORT} -Dconfig.resource=test.conf -Dplay.evolutions.db.default.autoApply=true -Dplay.evolutions.db.default.autoApplyDowns=true
