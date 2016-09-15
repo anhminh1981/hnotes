@@ -21,3 +21,4 @@ project/eclipse.sbt
 
 .settings
 .history
+public/client/js/config.js

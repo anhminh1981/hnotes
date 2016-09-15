@@ -51,18 +51,18 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run((Notes returning Notes) += note)
   }
   
-  private class NotesTable(tag: Tag) extends Table[Note](tag, "NOTES") {
+  private class NotesTable(tag: Tag) extends Table[Note](tag, "Notes") {
 
     
 
-    def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
-    def owner = column[Long]("OWNER")
-    def typeNote = column[String]("TYPE")
-    def title = column[String]("TITLE")
-    def text = column[String]("TEXT")
-    def data = column[Array[Byte]]("DATA")
-    def createdAt = column[DateTime]("CREATEDAT")
-    def modifiedAt = column[DateTime]("CREATEDAT")
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def owner = column[Long]("owner")
+    def typeNote = column[String]("type")
+    def title = column[String]("title")
+    def text = column[String]("text")
+    def data = column[Array[Byte]]("data")
+    def createdAt = column[DateTime]("createdAt")
+    def modifiedAt = column[DateTime]("modifiedAt")
     
     def * = (id, owner, typeNote, title, text, data, createdAt, modifiedAt) <> (Note.tupled, Note.unapply _)
     
