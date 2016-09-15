@@ -61,8 +61,8 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     def title = column[String]("title")
     def text = column[String]("text")
     def data = column[Array[Byte]]("data")
-    def createdAt = column[DateTime]("createdAt")
-    def modifiedAt = column[DateTime]("modifiedAt")
+    def createdAt = column[DateTime]("createdat")
+    def modifiedAt = column[DateTime]("modifiedat")
     
     def * = (id, owner, typeNote, title, text, data, createdAt, modifiedAt) <> (Note.tupled, Note.unapply _)
     
