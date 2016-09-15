@@ -51,7 +51,7 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run((Notes returning Notes) += note)
   }
   
-  private class NotesTable(tag: Tag) extends Table[Note](tag, "Notes") {
+  private class NotesTable(tag: Tag) extends Table[Note](tag, "notes") {
 
     
 

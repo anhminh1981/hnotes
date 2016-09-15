@@ -29,7 +29,7 @@ class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run((Users returning Users.map(_.id) )+= user).map { User(_, user.email, user.password, user.role) }
   }
 
-  private class UsersTable(tag: Tag) extends Table[User](tag, "Users") {
+  private class UsersTable(tag: Tag) extends Table[User](tag, "users") {
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def email = column[String]("email")
     def password = column[String]("password")
