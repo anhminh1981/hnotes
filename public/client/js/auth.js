@@ -1,4 +1,5 @@
 angular.module('hnotes.auth', ['hnotes.config'])
+
 	.config(function ($stateProvider) {
 		$stateProvider
 			.state('auth', {
@@ -6,7 +7,12 @@ angular.module('hnotes.auth', ['hnotes.config'])
 				templateUrl: 'templates/auth.html',
 				controller: 'AuthCtrl'
 			}) 
+			.state('logout', {
+				url: '/logout',
+				controller: 'LogoutCtrl'
+			}) 
 	})
+	
 	.factory('Auth', function($http, $window, $rootScope, SERVER_URL) {
 		var loggedIn = function(response) {
 			console.log(JSON.stringify(response))
@@ -28,10 +34,16 @@ angular.module('hnotes.auth', ['hnotes.config'])
 			},
 			signup: function(signupData) { 
 				return $http.post(SERVER_URL + '/signup', signupData).then(loggedIn, errLogin)
+			},
+			logout: function() {
+				$window.localStorage.removeItem('token')
+				$window.localStorage.removeItem('user')
 			}
 		} 
 	})
 	.controller('AuthCtrl', function($scope, $state, Auth) {
+		Auth.logout()
+		
 		$scope.doLogin = function(loginData) { 
 			Auth.login(loginData).then(function(result) { 
 				if(result.status == 'KO') { 
@@ -51,6 +63,13 @@ angular.module('hnotes.auth', ['hnotes.config'])
 				}
 			})
 		}
+		
+		
+	})
+	.controller('LogoutCtrl', function($state, Auth) {
+		Auth.logout()
+		
+		$state.go('auth')
 		
 		
 	})

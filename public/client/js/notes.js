@@ -1,4 +1,5 @@
 angular.module('hnotes.notes', ['hnotes.config'])
+
 	.config(function ($stateProvider) {
 		$stateProvider
 			.state('app.notes', {

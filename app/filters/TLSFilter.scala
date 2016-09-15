@@ -1,14 +1,15 @@
 package filters
 
-import scala.concurrent.{ExecutionContext, Future}
-
-import play.api.mvc.Filter
-import play.api.mvc.Results
+import scala.annotation.implicitNotFound
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import play.api.mvc.RequestHeader
-import play.api.mvc.Result
+
 import akka.stream.Materializer
 import javax.inject.Inject
+import play.api.mvc.Filter
+import play.api.mvc.RequestHeader
+import play.api.mvc.Result
+import play.api.mvc.Results
 
 class TLSFilter @Inject()(
     implicit override val mat: Materializer,
