@@ -11,7 +11,7 @@ CREATE TABLE "USERS" (
 
 CREATE TABLE "NOTES" (
 	"ID" SERIAL, 
-	"OWNER" bigint NOT NULL REFERENCES Users(id), 
+	"OWNER" bigint NOT NULL REFERENCES "USERS"("ID"), 
 	"TYPE" varchar(20) NOT NULL, 
 	"TITLE" varchar(50), 
 	"TEXT" text, 
