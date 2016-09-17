@@ -34,7 +34,12 @@ angular.module('hnotes.notes', ['hnotes.config'])
 			     })
 		}
 		
-		$scope.doRefresh()
+		$scope.$on('$stateChangeSuccess', function(event, toState) {
+			if(toState.name == 'app.notes') {
+				$scope.doRefresh()
+			}
+		})
+		
 		
 		
 	})

@@ -21,7 +21,7 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 	// Re-route to welcome street if we don't have an authenticated token
 	$rootScope.$on('$stateChangeStart', function(event, toState) {
 		var emptyToken
-		
+		console.log("going to " + toState.name)
 		if($window.localStorage.getItem('token')) {
 			emptyToken = false
 		} else {

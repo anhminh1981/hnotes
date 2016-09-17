@@ -42,7 +42,6 @@ angular.module('hnotes.auth', ['hnotes.config'])
 		} 
 	})
 	.controller('AuthCtrl', function($scope, $state, Auth) {
-		Auth.logout()
 		
 		$scope.doLogin = function(loginData) { 
 			Auth.login(loginData).then(function(result) { 
@@ -65,11 +64,18 @@ angular.module('hnotes.auth', ['hnotes.config'])
 		}
 		
 		
-	})
-	.controller('LogoutCtrl', function($state, Auth) {
-		Auth.logout()
 		
-		$state.go('auth')
+		
+	})
+	.controller('LogoutCtrl', function($scope, $state, Auth) {
+		
+		$scope.$on('$stateChangeSuccess', function(event, toState) {
+			if(toState.name == 'logout') {
+				console.log("logging out")
+				Auth.logout()
+				$state.go('auth')
+			}
+		})
 		
 		
 	})
