@@ -7,7 +7,7 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.driver.JdbcProfile
-
+import com.github.t3hnar.bcrypt._
 
 import models.User
 import play.api.Logger
@@ -35,6 +35,8 @@ class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     def password = column[String]("PASSWORD")
     def role = column[String]("ROLE")
     
-    def * = (id, email, password, role) <> (User.tupled, User.unapply _)
+    def crypt(user: User): User = user.copy(password = user.password.bcrypt)
+    
+    def * = (id, email, password, role) <> (User.tupled, User.unapply _ compose crypt _)
   }
 }

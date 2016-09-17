@@ -56,24 +56,6 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
 		}
   }
   
-
-  def signup = commonNeedPasswordAndEmail { (email, password) => 
-    Logger.debug("signup")
-    val existingUser = userDao.selectByEmail(email )
-  
-    existingUser flatMap { user => 
-    if(user.isDefined) 
-  	  Future.successful(Ok(signupFailure + ("cause" -> JsString("email already registered")) )) 
-  	  else {
-  		  val newUser = userDao.insert(User(0, email, password.bcrypt, "user"))
-  		  Logger.debug("new user: " + newUser)
-  		  newUser map { user2 => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))}
-  	  }
-    }
-
-  }
-
-    
   def createToken(user: User) = { 
 	  secretOption match { 
 	  case Some(secret) => val now = Instant.now()
@@ -85,6 +67,25 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
 	  case None => throw new IllegalStateException("The application must have a secret")
 	  }
   }
+
+  def signup = commonNeedPasswordAndEmail { (email, password) => 
+    Logger.debug("signup")
+    val existingUser = userDao.selectByEmail(email )
+  
+    existingUser flatMap { user => 
+    if(user.isDefined) 
+  	  Future.successful(Ok(signupFailure + ("cause" -> JsString("email already registered")) )) 
+  	  else {
+  		  val newUser = userDao.insert(User(0, email, password, "user"))
+  		  Logger.debug("new user: " + newUser)
+  		  newUser map { user2 => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))}
+  	  }
+    }
+
+  }
+
+    
+  
   
   
   def login = commonNeedPasswordAndEmail { (email, password) => 
