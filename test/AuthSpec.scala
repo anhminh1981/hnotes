@@ -3,11 +3,40 @@ import play.api.test._
 import play.api.test.Helpers._
 import play.api.mvc.Headers
 import play.api.libs.json.Json
+import scala.concurrent.Future
+import play.api.mvc.Result
 
 
 class AuthSpec extends PlaySpec with OneAppPerSuite {
+  
+  def checkKo(result: Future[Result], method: String , expectedCause: String): Unit = {
+    status(result) mustBe OK
+      
+    contentType(result) mustBe Some("application/json")
+       
+    val json = contentAsJson(result)
+       
+    (json \ "request").asOpt[String] mustBe Some( method )
+    ((json \ "status").asOpt[String], (json \ "cause").asOpt[String]) mustBe (Some("KO"), Some(expectedCause))
+    (json \ "token").asOpt[String] mustBe None
+  }
+  
+  def checkOk(result: Future[Result], method: String) {
+    status(result) mustBe OK
+      
+    contentType(result) mustBe Some("application/json")
+     
+    val json = contentAsJson(result)
+     
+    (json \ "request").asOpt[String] mustBe Some( method )
+  	((json \ "status").asOpt[String], (json \ "cause").asOpt[String]) mustBe (Some("OK"), None)
+    (json \ "token").asOpt[String].getOrElse("") mustNot be(empty)
+  }
+  
+  
+  
    "signup" must {
-     val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "a" )
+     val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "Aa123_4567" )
       
      val request = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
          body =  requestBody )
@@ -16,42 +45,86 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
       
       val result = route(app, request).get
        
+      checkOk(result, "signup")
       
-      status(result) mustBe OK
-      
-      contentType(result) mustBe Some("application/json")
-       
-      val json = contentAsJson(result)
-       
-      (json \ "request").asOpt[String] mustBe Some( "signup" )
-    	(json \ "cause").asOpt[String] mustBe None
-      (json \ "status").asOpt[String] mustBe Some("OK")
-      (json \ "token").asOpt[String].getOrElse("") mustNot be(empty)
      }
      
      "refuse a second identical request" in {
        val result = route(app, request).get
        
+      checkKo(result, "signup", "email already registered")
       
-      status(result) mustBe OK
-      
-      contentType(result) mustBe Some("application/json")
-       
-      val json = contentAsJson(result)
-       
-      (json \ "request").asOpt[String] mustBe Some( "signup" )
-    	(json \ "cause").asOpt[String] mustBe Some("email already registered")
-      (json \ "status").asOpt[String] mustBe Some("KO")
-      (json \ "token").asOpt[String] mustBe None
      }
      
+     "check the email format" in {
+       val requestBodyF = Json.obj( "email" -> "a_a.a", "password" -> "Aa123_4567" )
+      
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", "wrong email format")
+     }
      
+     val passwordError = "password must be 6 to 20 characters long, and must contain lower case, upper case, digit and special characters"
+     "check the password is more than 5 characters" in {
+       val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "aB3!!" )
+    
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", passwordError)
+     }
+     
+     "check the password is less than 21 characters" in {
+       val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "aB3!!aB3!!aB3!!aB3!!a" )
+    
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", passwordError)
+     }
+     
+     "check the password has at least one lower case character" in {
+       val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "ABC123!" )
+    
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", passwordError)
+     }
+     
+     "check the password has at least one upper case character" in {
+       val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "abc123!" )
+    
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", passwordError)
+     }
+     
+     "check the password has at least one digit" in {
+       val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "abcabc!" )
+    
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", passwordError)
+     }
+     
+     "check the password has at least one special character" in {
+       val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "abc123" )
+    
+       val requestF = new FakeRequest(POST, "/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+           body =  requestBodyF )
+       val result = route(app, requestF).get
+       checkKo(result, "signup", passwordError)
+     }
      
    }
    
    "login" should {
      "login a user" in {
-      val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "a" )
+      val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "Aa123_4567" )
       
       val request = new FakeRequest(POST, "/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
           body =  requestBody )

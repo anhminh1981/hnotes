@@ -22,18 +22,20 @@ import scala.util.Success
 import scala.util.Failure
 import org.scalatest.BeforeAndAfterEach
 import com.github.t3hnar.bcrypt._
+import play.api.Environment
 
 
 class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
   // default values
   val email = "test@test.test"
-  val password = "password"
+  val password = "Aa123_4567"
   val role = "user"
   val user = User(2, email, password.bcrypt, role)
   //Mocking the secret
   private val secret = "changeme"
   
   private implicit val configuration = mock[Configuration]
+  private implicit val env = mock[Environment]
   
   
   private var userDao = null: UserDao
