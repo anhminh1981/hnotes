@@ -46,7 +46,7 @@ angular.module('hnotes.auth', ['hnotes.config'])
 		$scope.doLogin = function(loginData) { 
 			Auth.login(loginData).then(function(result) { 
 				if(result.status == 'KO') { 
-					$scope.signupError = result.cause;
+					$scope.loginError = result.cause;
 				} else { 
 					$state.go('app.notes');
 				}
