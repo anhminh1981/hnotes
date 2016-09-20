@@ -47,8 +47,8 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(updateAction)
   }
   
-  def insert(note: Note): Future[Note] = {
-    db.run((Notes returning Notes) += note)
+  def insert(note: Note): Future[Long] = {
+    db.run((Notes returning Notes.map(_.id)) += note)
   }
   
   private class NotesTable(tag: Tag) extends Table[Note](tag, "NOTES") {

@@ -2,6 +2,10 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 
 import services.{ApplicationTimer, AtomicCounter, Counter}
+import play.api.{ Configuration, Environment }
+import play.api.Mode
+import services.DevData
+import javax.inject.Inject
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -13,7 +17,9 @@ import services.{ApplicationTimer, AtomicCounter, Counter}
  * adding `play.modules.enabled` settings to the `application.conf`
  * configuration file.
  */
-class Module extends AbstractModule {
+class Module(
+  environment: Environment,
+  configuration: Configuration) extends AbstractModule {
 
   override def configure() = {
     // Use the system clock as the default implementation of Clock
@@ -23,6 +29,12 @@ class Module extends AbstractModule {
     bind(classOf[ApplicationTimer]).asEagerSingleton()
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
+    
+    
+    // in dev mode, will instantiate the DevData object
+    if(environment.mode == Mode.Dev) {
+      bind(classOf[DevData]).asEagerSingleton()
+    }
   }
 
 }
