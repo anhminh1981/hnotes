@@ -129,9 +129,6 @@ object AuthConstants {
 }
 
 
-class UserRequest[A](val user: Option[User], request: Request[A]) extends WrappedRequest[A](request)
-
-
 
 
 
