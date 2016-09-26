@@ -20,6 +20,7 @@ POST    /login                      controllers.AuthController.login()
 
 GET		/test						controllers.AuthController.test()
 
+
 GET		/notes						controllers.NoteController.notes
 GET		/notes/:noteId				controllers.NoteController.note(noteId: Long)
 POST	/edit						controllers.NoteController.edit
