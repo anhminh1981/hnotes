@@ -1,6 +1,6 @@
 angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnotes.filters', 'hnotes.auth', 'hnotes.notes'])
 
-.run(function($ionicPlatform, $rootScope, $window, $state, $location, SERVER_URL) {
+.run(function($ionicPlatform, $ionicPopup, $rootScope, $window, $state, $location, SERVER_URL) {
 
 	
 	$ionicPlatform.ready(function() {
@@ -34,6 +34,17 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 		}
 	});
 
+	$rootScope.$on('responseError', function(event, response) {
+		var alertPopup = $ionicPopup.alert({
+			title: 'Error',
+			template: 'There was a problem contacting the server. Please retry later.'
+		});
+
+		alertPopup.then(function(res) {
+			console.log('Error: ' + JSON.stringify(response));
+		});
+	})
+	
 	$state.go('app.notes');
 
 })

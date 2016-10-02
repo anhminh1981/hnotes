@@ -25,6 +25,7 @@ import play.api.Logger
 
 class NoteController @Inject() (noteDao: NoteDao) (implicit val configuration: Configuration) extends Controller with Secured {
   val summaryLength = 20
+  val updateSuccess = Json.obj("request" -> "update", "status" -> "OK")
   val noteWrites = new Writes[Note] {
     def writes(note: Note) = {
       val encodedData = Base64.getEncoder.encode(note.data)
@@ -96,8 +97,14 @@ class NoteController @Inject() (noteDao: NoteDao) (implicit val configuration: C
     def refine[A](request: UserRequest[A]) : Future[Either[Result, ItemRequest[A]]] =  {
   		if(request.body.isInstanceOf[JsValue]) {
   			val body = request.body.asInstanceOf[JsValue]
-				val itemId = (body \ "id").asOpt[Long]
-
+  			
+  			Logger.debug("body: " + body.toString())
+  			val jsLookup = body \ "id"
+  			Logger.debug("body \\ id: " + jsLookup.toString())
+				val itemId = jsLookup.asOpt[Long]
+				
+  			Logger.debug(s"itemId = $itemId")
+  			
 				if(itemId == None) {
 					Future.successful(Left(BadRequest("Bad format")))
 				} else {
@@ -113,10 +120,11 @@ class NoteController @Inject() (noteDao: NoteDao) (implicit val configuration: C
   
   def edit = (Authenticated andThen NotePostAction andThen PermissionCheckAction).async(parse.json) { implicit request =>
     val body = request.body
-    val id = (body \ "id").asOpt[Long]
-    val oldNote = request.item
+    
+    val oldNote = request.item  // uselessfor now
+    val id = oldNote.id
     val title = (body \ "title").asOpt[String]
     val text = (body \ "text").asOpt[String]
-    noteDao.update(id.get, title.getOrElse(""), text.getOrElse("")) map { _ => Ok}
+    noteDao.update(id, title.getOrElse(""), text.getOrElse("")) map { _ => Ok(updateSuccess + ("id" -> JsNumber(id) ) ) }
   }
 }

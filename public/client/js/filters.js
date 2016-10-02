@@ -33,7 +33,7 @@ angular.module('hnotes.filters', ['ionic'])
 	}
 })
 
-	.factory('ErrorFilter', function($rootScope, $ionicPopup ) { 
+	.factory('ErrorFilter', function($rootScope ) { 
 	return {
 		requestError: function (request) {
 			console.log('request error');
@@ -41,14 +41,8 @@ angular.module('hnotes.filters', ['ionic'])
         },
         responseError: function (response) {
         	console.log('response error: ' + response.status);
-			var alertPopup = $ionicPopup.alert({
-				title: 'Error',
-				template: 'There was a problem contacting the server. Please retry later.'
-			});
-
-			alertPopup.then(function(res) {
-				console.log('Alert popup');
-			});
+        	$rootScope.$broadcast('responseError', response)
+			
             return response;
         }
 	}

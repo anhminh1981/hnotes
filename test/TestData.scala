@@ -22,6 +22,10 @@ trait TestData {
   val noteDao = new NoteDao(dbConfigProvider)
   private val now = Instant.now().toDateTime()
   
+  var noteId1: Long = 0
+  var noteId2: Long = 0
+  var noteId3: Long = 0
+  
   def insertData = {
 	  val result = for(
 			  existing <- userDao.selectByEmail("test@test.test") if existing.isEmpty;
@@ -30,7 +34,11 @@ trait TestData {
 			  note <- noteDao.insert(Note(0, user.id, "text", "title", "lore ipsum", Array[Byte](), now, now) ) ;
 			  note2 <- noteDao.insert(Note(0, user.id, "text", "title2", "lore ipsum", Array[Byte](), now, now) ) ;
 			  note3 <- noteDao.insert(Note(0, user2.id, "text", "title3", "lore ipsum", Array[Byte](), now, now) ) 
-			  ) yield 1
+			  ) yield {
+	    noteId1 = note
+	    noteId2 = note2
+	    noteId3 = note3
+	  }
 
 	  result.onComplete {
 	    case Success(_) => {

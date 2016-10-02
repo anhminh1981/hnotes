@@ -7,14 +7,12 @@
   	<ion-refresher pulling-text="Pull to refresh..." on-refresh="doRefresh()">
   	</ion-refresher>
   	<div>
-	  	<div class="card" collection-repeat="note in notes">
-		  <div class="item item-divider">
-		    {{note.title}}
-		  </div>
-		  <div class="item item-text-wrap">
-		    {{note.text}}
-		  </div>
-		</div>
+	<div class="card" collection-repeat="note in notes">
+		<a ui-sref="app.note({id: note.id})">
+			<div class="item item-divider">{{note.title}}</div>
+			<div class="item item-text-wrap">{{note.text}}</div>
+		</a>
 	</div>
+</div>
   </ion-content>
 </ion-view>

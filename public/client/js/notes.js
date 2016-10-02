@@ -16,7 +16,7 @@ angular.module('hnotes.notes', ['hnotes.config'])
 			url: '/notes/:id',
 			views: {
 				'menuContent': {
-					templateUrl: 'templates/note-edit.html',
+					templateUrl: 'templates/editor.html',
 					controller: 'NoteEditCtrl'
 
 				}
@@ -30,6 +30,9 @@ angular.module('hnotes.notes', ['hnotes.config'])
 			},
 			detail: function(id) {
 				return $http.get(SERVER_URL + '/notes/' + id)
+			},
+			update: function(note) {
+				return $http.post(SERVER_URL + '/notes', note)
 			}
 		}
 	})
@@ -55,15 +58,41 @@ angular.module('hnotes.notes', ['hnotes.config'])
 		
 	})
 
-	.controller('NoteEditCtrl', function($scope, Notes, $stateParams ) {
-		$scope.doRefresh() = function() {
-			Notes.
+	.controller('NoteEditCtrl', function($scope, Notes, $stateParams, $interval ) {
+		var editor = CKEDITOR.replace( 'editor', {toolbarLocation: 'bottom'} );
+		var autosave = undefined
+				
+		$scope.doRefresh = function() {
+			Notes.detail($stateParams.id).then(function(result) {
+				editor.setData(result.data.text)
+				$scope.title = result.data.title
+				if(autosave == undefined) {
+					autosave = $interval($scope.save, 30 * 1000)
+				}
+			},
+			function() {
+				
+			})
 		}
 	
-	
-		$scope.$on('$stateChangeSuccess', function(event, toState) {
+		$scope.save = function() {
+			// TODO add dirty checking of title and text
+			var id = Number($stateParams.id)
+			var note = {id: id, title: $scope.title, text: editor.getData()}
+			console.log("save: " + JSON.stringify(note))
+			// TODO reset dirty for title and text
+			Notes.update(note).then(function(response) {
+				console.log(JSON.stringify(response))
+			});
+			return;
+		}
+		
+		$scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
 			if(toState.name == 'app.note') {
 				$scope.doRefresh()
+			} else if(fromState.name == 'app.note' && autosave != undefined) {
+				$interval.cancel(autosave)
+				autosave = undefined
 			}
 		})
 

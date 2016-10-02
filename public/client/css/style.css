@@ -8,3 +8,7 @@ input.ng-invalid-compare-to:not(.ng-pristine) {
 	color: red;
 	font-weight: bold;
 }
+
+.note #title {
+	height: 2em;
+}

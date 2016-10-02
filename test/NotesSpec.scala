@@ -43,5 +43,29 @@ class NotesSpec extends PlaySpec with OneAppPerSuite with TestData  {
       (json \ "notes").as[Array[JsObject]].length mustBe 2
     
     }
+    
+  }
+  
+  "/notes/id" should {
+    "forbid the consultation of notes not owned by the user" in {
+      val request = new FakeRequest(GET, "/notes/" + noteId3, headers = FakeHeaders(Seq("Authorization" -> token)), body = "")
+      val result = route(app, request).get
+      
+      status(result) mustBe FORBIDDEN
+    }
+    "return the note if it's owned by the user" in {
+      val request = new FakeRequest(GET, "/notes/" + noteId2, headers = FakeHeaders(Seq("Authorization" -> token)), body = "")
+      val result = route(app, request).get
+      
+      status(result) mustBe OK
+      
+      contentType(result) mustBe Some("application/json")
+     
+      val json = contentAsJson(result)
+      
+      (json \ "title").as[String] mustBe "title2"
+      (json \ "text").as[String] mustBe "lore ipsum"
+      
+    }
   }
 }
