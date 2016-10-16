@@ -107,11 +107,15 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
       case (None, _) => Future.successful(Ok(loginFailure + ("cause" -> JsString("auth0 not configured"))) )
 	    case (_, None) => Future.successful(Ok(loginFailure + ("cause" -> JsString("no token"))))
 	    case (Some(url), Some(token)) => {
-	      val request = ws.url(url).withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
-	      val body = Json.obj("id_token" -> token)
-	      val res = for(response <- request.post(body) if (response.json \ "email").toOption.isDefined && (response.json \ "email_verified").asOpt[Boolean] == Some(true);
-	        user <- userDao.selectByEmail((response.json \ "email").as[String]) if user.isDefined
-	        ) yield Ok(loginSuccess + ("token" -> JsString(createToken(user.get))) + ("user" -> Json.toJson(user)))       
+	      val request = ws.url(url + "/tokeninfo").withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
+  		  val body = Json.obj("id_token" -> token)
+  		  val res = for(response <- request.post(body) if (response.json \ "email").toOption.isDefined && (response.json \ "email_verified").asOpt[Boolean] == Some(true);
+  				  userOpt <- userDao.selectByEmail((response.json \ "email").as[String]) 
+  				  ) yield userOpt match {
+  		      case None => Ok(loginFailure + ("cause" -> JsString("email not found")))
+  				  case Some(user) => Ok(loginSuccess + ("token" -> JsString(createToken(user))) + ("user" -> Json.toJson(userOpt)))
+  		  }
+
         res fallbackTo(Future.successful(Ok(loginFailure+ ("cause" -> JsString("invalid auth0 token")))))
 	    }
     }
