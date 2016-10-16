@@ -1,6 +1,15 @@
-angular.module('hnotes.auth', ['hnotes.config'])
+angular.module('hnotes.auth', ['hnotes.config', 'auth0.lock', 'angular-jwt'])
 
-	.config(function ($stateProvider) {
+	.config(function ($stateProvider, lockProvider) {
+		lockProvider.init({
+	        clientID: 'RqwHCef6ycF9tjPCUxFIDuujpzmHjcfE',
+	        domain: 'anhminh.eu.auth0.com',
+	        options: {
+	        	container: 'lock-container',
+	        	language: 'fr'
+	        		}
+	      });
+		
 		$stateProvider
 			.state('auth', {
 				url: '/auth',
@@ -11,6 +20,13 @@ angular.module('hnotes.auth', ['hnotes.config'])
 				url: '/logout',
 				controller: 'LogoutCtrl'
 			}) 
+	})
+	
+	.run(function(lock) {
+		
+		// Intercept the hash that comes back from authentication
+	    // to ensure the `authenticated` event fires
+	    lock.interceptHash()
 	})
 	
 	.factory('Auth', function($http, $window, $rootScope, SERVER_URL) {
@@ -41,8 +57,11 @@ angular.module('hnotes.auth', ['hnotes.config'])
 			}
 		} 
 	})
-	.controller('AuthCtrl', function($scope, $state, Auth) {
-		
+	.controller('AuthCtrl', function($scope, $state, Auth, authService) {
+		// Put the authService on $scope to access
+        // the login method in the view
+        $scope.authService = authService;
+        
 		$scope.doLogin = function(loginData) { 
 			Auth.login(loginData).then(function(result) { 
 				if(result.status == 'KO') { 
@@ -67,12 +86,14 @@ angular.module('hnotes.auth', ['hnotes.config'])
 		
 		
 	})
-	.controller('LogoutCtrl', function($scope, $state, Auth) {
+	.controller('LogoutCtrl', function($scope, $state, Auth, authService) {
+		
 		
 		$scope.$on('$stateChangeSuccess', function(event, toState) {
 			if(toState.name == 'logout') {
 				console.log("logging out")
 				Auth.logout()
+				authService.logout()
 				$state.go('auth')
 			}
 		})
@@ -97,4 +118,64 @@ angular.module('hnotes.auth', ['hnotes.config'])
 	            });
 	        }
 	    };
-	});
+	})
+	.service('authService', authService)
+	.run(function(authService) {
+	
+	  // Put the authService on $rootScope so its methods
+	  // can be accessed from the nav bar
+	  authService.registerAuthenticationListener();
+	});;
+
+
+authService.$inject = ['$rootScope', 'lock', 'authManager'];
+
+function authService($rootScope, lock, authManager) {
+
+  var userProfile = JSON.parse(localStorage.getItem('profile')) || {};
+
+  function login() {
+	  console.log("authservice login")
+    lock.show();
+  }
+
+  // Logging out just requires removing the user's
+  // id_token and profile
+  function logout() {
+    localStorage.removeItem('id_token');
+    localStorage.removeItem('profile');
+    authManager.unauthenticate();
+    userProfile = {};
+  }
+
+  // Set up the logic for when a user authenticates
+  // This method is called from app.run.js
+  function registerAuthenticationListener() {
+    lock.on('authenticated', function(authResult) {
+      localStorage.setItem('id_token', authResult.idToken);
+      console.log(authResult.idToken)
+      authManager.authenticate();
+
+      lock.getProfile(authResult.idToken, function(error, profile) {
+        if (error) {
+          console.log(error);
+        }
+        
+        console.log("userProfileSet")
+        console.log(localStorage.getItem("id_token"))
+        console.log(profile.id)
+        console.log(JSON.stringify(profile))
+
+        localStorage.setItem('profile', JSON.stringify(profile));
+        $rootScope.$broadcast('userProfileSet', profile);
+      });
+    });
+  }
+
+  return {
+    userProfile: userProfile,
+    login: login,
+    logout: logout,
+    registerAuthenticationListener: registerAuthenticationListener
+  }
+}

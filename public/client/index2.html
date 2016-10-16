@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+
+    <!-- TinyMce: rich text editor -->
+    <script src="http://cdn.tinymce.com/4/tinymce.min.js"></script>
+
+	<script>
+	tinymce.init({
+	    selector: '#test',
+	    inline:true,
+	    menubar: false
+	  });
+	</script>
+    
+  </head>
+
+  <body >
+  	<div id="test" contenteditable="true" >azerty</div>
+  </body>
+</html>

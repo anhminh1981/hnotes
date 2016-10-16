@@ -1,7 +1,7 @@
 angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnotes.filters', 'hnotes.auth', 'hnotes.notes'])
 
 .run(function($ionicPlatform, $ionicPopup, $rootScope, $window, $state, $location, SERVER_URL) {
-
+	
 	
 	$ionicPlatform.ready(function() {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -50,6 +50,8 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 })
 
 .config(function($stateProvider, $urlRouterProvider) {
+	
+	
 	$stateProvider
 
 	.state('app', {
@@ -73,6 +75,7 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 
 
 	// if none of the above states are matched, use this as the fallback
-	$urlRouterProvider.otherwise('/app/notes');
+	$urlRouterProvider.otherwise('/auth');
 } )
+
 ;
