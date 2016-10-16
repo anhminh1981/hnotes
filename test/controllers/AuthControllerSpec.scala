@@ -23,6 +23,7 @@ import scala.util.Failure
 import org.scalatest.BeforeAndAfterEach
 import com.github.t3hnar.bcrypt._
 import play.api.Environment
+import play.api.libs.ws.WSClient
 
 
 class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
@@ -36,6 +37,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
   
   private implicit val configuration = mock[Configuration]
   private implicit val env = mock[Environment]
+  private implicit val ws = mock[WSClient]
   
   
   private var userDao = null: UserDao

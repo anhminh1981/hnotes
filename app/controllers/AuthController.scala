@@ -26,10 +26,11 @@ import play.api.mvc.Security.AuthenticatedRequest
 import play.api.data.validation.Constraints
 import play.api.data.validation.Valid
 import play.api.data.validation.Invalid
+import play.api.libs.ws.WSClient
 
 
 @Singleton
-class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration, env: Environment) extends Controller with Secured {
+class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration, env: Environment, ws: WSClient) extends Controller with Secured {
   val signupSuccess = Json.obj("request" -> "signup", "status" -> "OK")
   val signupFailure = Json.obj("request" -> "signup", "status" -> "KO")
   val loginSuccess = Json.obj("request" -> "login", "status" -> "OK")
@@ -37,6 +38,8 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
     
   // Lazy so the mock can be told what to do after instanciation in the tests
   lazy val secretOption = configuration.getString("play.crypto.secret")
+  
+  val auth0UrlOption = configuration.getString("auth0.domain") map {"https://" + _}
   
   
   implicit val userWrites: Writes[User] = ( 
@@ -93,11 +96,26 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
       }
     }
     
-    
 
   }
 
     
+  def auth0Login = Action.async(parse.json) { implicit request =>
+    Logger.debug("auth0 login")
+    val tokenOption = (request.body \ "token").asOpt[String]
+	  (auth0UrlOption, tokenOption) match {
+      case (None, _) => Future.successful(Ok(loginFailure + ("cause" -> JsString("auth0 not configured"))) )
+	    case (_, None) => Future.successful(Ok(loginFailure + ("cause" -> JsString("no token"))))
+	    case (Some(url), Some(token)) => {
+	      val request = ws.url(url).withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
+	      val body = Json.obj("id_token" -> token)
+	      val res = for(response <- request.post(body) if (response.json \ "email").toOption.isDefined && (response.json \ "email_verified").asOpt[Boolean] == Some(true);
+	        user <- userDao.selectByEmail((response.json \ "email").as[String]) if user.isDefined
+	        ) yield Ok(loginSuccess + ("token" -> JsString(createToken(user.get))) + ("user" -> Json.toJson(user)))       
+        res fallbackTo(Future.successful(Ok(loginFailure+ ("cause" -> JsString("invalid auth0 token")))))
+	    }
+    }
+  }
   
   
   

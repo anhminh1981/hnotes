@@ -6,7 +6,10 @@ angular.module('hnotes.auth', ['hnotes.config', 'auth0.lock', 'angular-jwt'])
 	        domain: 'anhminh.eu.auth0.com',
 	        options: {
 	        	container: 'lock-container',
-	        	language: 'fr'
+	        	language: 'fr',
+	        	auth: {
+	        		scope: 'openid email'
+	        			}
 	        		}
 	      });
 		
@@ -54,10 +57,14 @@ angular.module('hnotes.auth', ['hnotes.config', 'auth0.lock', 'angular-jwt'])
 			logout: function() {
 				$window.localStorage.removeItem('token')
 				$window.localStorage.removeItem('user')
+			},
+			auth0Login: function(idToken) {
+				console.log("auth0 login")
+				return $http.post(SERVER_URL + '/auth0Login', {token: idToken}).then(loggedIn, errLogin)
 			}
 		} 
 	})
-	.controller('AuthCtrl', function($scope, $state, Auth, authService) {
+	.controller('AuthCtrl', function($scope, $state, Auth, authService, $rootScope) {
 		// Put the authService on $scope to access
         // the login method in the view
         $scope.authService = authService;
@@ -120,11 +127,16 @@ angular.module('hnotes.auth', ['hnotes.config', 'auth0.lock', 'angular-jwt'])
 	    };
 	})
 	.service('authService', authService)
-	.run(function(authService) {
+	.run(function($rootScope, authService, Auth) {
 	
 	  // Put the authService on $rootScope so its methods
 	  // can be accessed from the nav bar
+		$rootScope.authService = authService
 	  authService.registerAuthenticationListener();
+		$rootScope.$on('idTokenSet', function(event, token) {
+			console.log("id token set received")
+			Auth.auth0Login(token)
+		})
 	});;
 
 
@@ -154,6 +166,9 @@ function authService($rootScope, lock, authManager) {
     lock.on('authenticated', function(authResult) {
       localStorage.setItem('id_token', authResult.idToken);
       console.log(authResult.idToken)
+      $rootScope.$broadcast('idTokenSet', authResult.idToken)
+      console.log("broadcast id token set")
+      /*
       authManager.authenticate();
 
       lock.getProfile(authResult.idToken, function(error, profile) {
@@ -161,14 +176,11 @@ function authService($rootScope, lock, authManager) {
           console.log(error);
         }
         
-        console.log("userProfileSet")
-        console.log(localStorage.getItem("id_token"))
-        console.log(profile.id)
-        console.log(JSON.stringify(profile))
 
         localStorage.setItem('profile', JSON.stringify(profile));
         $rootScope.$broadcast('userProfileSet', profile);
       });
+      */
     });
   }
 
