@@ -23,6 +23,8 @@ import scala.util.Failure
 import org.scalatest.BeforeAndAfterEach
 import com.github.t3hnar.bcrypt._
 import play.api.Environment
+import java.util.NoSuchElementException
+import dao.exception.InsertDuplicateException
 
 
 class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
@@ -95,7 +97,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     	when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
-    	when(userDao.insert(any[User])) thenReturn Future.successful(user)
+    	when(userDao.insert(any[User])) thenReturn Future.successful(Success(user))
 
     	
       val requestBody = Json.obj( "email" -> email, "password" -> password )
@@ -109,7 +111,6 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       val json = contentAsJson(result)
       
-      verify(userDao).selectByEmail(email)
       verify(userDao).insert(any[User])
       
       
@@ -120,7 +121,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "not register a user twice" in { 
-    	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user))
+    	when(userDao.insert(any[User])) thenReturn Future.successful(Failure(InsertDuplicateException("USERS", "email", email)))
       
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
@@ -129,11 +130,11 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       val result = controller.signup().apply(request)
       
+      status(result) mustBe OK
+      
       val json = contentAsJson(result)
       
-      verify(userDao).selectByEmail(email)
       
-      verify(userDao, never()).insert(any[User])
       
       
       

@@ -27,6 +27,7 @@
 
   <logger name="play" level="DEBUG" />
   <logger name="application" level="DEBUG" />
+  <logger name="dao" level="DEBUG" />
 
   <logger name="slick.jdbc" level="DEBUG"/>
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourselves -->

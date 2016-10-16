@@ -9,6 +9,6 @@ input.ng-invalid-compare-to:not(.ng-pristine) {
 	font-weight: bold;
 }
 
-.note #title {
+.note note_title {
 	height: 2em;
 }

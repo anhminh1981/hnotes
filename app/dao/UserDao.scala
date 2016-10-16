@@ -11,6 +11,9 @@ import com.github.t3hnar.bcrypt._
 
 import models.User
 import play.api.Logger
+import scala.util.Try
+import scala.util.Failure
+import dao.exception.InsertDuplicateException
 
 class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
   import driver.api._
@@ -24,9 +27,18 @@ class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(query.result ) map { seq => if(seq.isEmpty) None else Some(seq.head)}
   }
 
-  def insert(user: User): Future[User] = {
-    Logger.debug("Inserting " + user)
-    db.run((Users returning Users.map(_.id) )+= user).map { User(_, user.email, user.password, user.role) }
+  def insert(user: User): Future[Try[User]] = {
+    Logger.debug("Inserting user " + user.email)
+    val ins = (for {
+      existing <- (Users filter(_.email === user.email)).result if existing.isEmpty
+      newId <- (Users returning Users.map(_.id) )+= user
+    } yield User(newId, user.email, user.password, user.role)).transactionally
+    
+    val r = db.run(ins.asTry)
+    
+    r map { _ recoverWith {
+    case e => if(e.isInstanceOf[NoSuchElementException]) Failure(InsertDuplicateException("USERS", "email", user.email)) else Failure(e)
+    }}
   }
 
   private class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {

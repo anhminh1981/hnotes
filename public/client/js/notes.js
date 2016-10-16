@@ -1,6 +1,7 @@
 angular.module('hnotes.notes', ['hnotes.config'])
 
 	.config(function ($stateProvider) {
+		
 		$stateProvider
 			.state('app.notes', {
 			url: '/notes',
@@ -59,13 +60,17 @@ angular.module('hnotes.notes', ['hnotes.config'])
 	})
 
 	.controller('NoteEditCtrl', function($scope, Notes, $stateParams, $interval ) {
-		var editor = CKEDITOR.replace( 'editor', {toolbarLocation: 'bottom'} );
+		CKEDITOR.disableAutoInline = true
 		var autosave = undefined
+		var titleEditor = CKEDITOR.inline( 'note_title' );
+		var editor = CKEDITOR.inline( 'editor' );
 				
 		$scope.doRefresh = function() {
 			Notes.detail($stateParams.id).then(function(result) {
+				
 				editor.setData(result.data.text)
-				$scope.title = result.data.title
+				titleEditor.setData(result.data.title)
+				$scope.note = result.data
 				if(autosave == undefined) {
 					autosave = $interval($scope.save, 30 * 1000)
 				}
@@ -76,14 +81,13 @@ angular.module('hnotes.notes', ['hnotes.config'])
 		}
 	
 		$scope.save = function() {
+			console.log("titleed " + titleEditor)
 			// TODO add dirty checking of title and text
 			var id = Number($stateParams.id)
-			var note = {id: id, title: $scope.title, text: editor.getData()}
+			var note = {id: id, title: titleEditor.getData(), text: editor.getData()}
 			console.log("save: " + JSON.stringify(note))
 			// TODO reset dirty for title and text
-			Notes.update(note).then(function(response) {
-				console.log(JSON.stringify(response))
-			});
+			Notes.update(note);
 			return;
 		}
 		

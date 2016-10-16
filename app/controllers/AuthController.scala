@@ -26,6 +26,9 @@ import play.api.mvc.Security.AuthenticatedRequest
 import play.api.data.validation.Constraints
 import play.api.data.validation.Valid
 import play.api.data.validation.Invalid
+import scala.util.Success
+import scala.util.Failure
+import dao.exception.InsertDuplicateException
 
 
 @Singleton
@@ -73,24 +76,20 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
 
   def signup = commonNeedPasswordAndEmail { (email, password) => 
     Logger.debug("signup")
-    Logger.debug("password " + password + " " + """^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,20}$""".r.pattern.matcher(password).find())
     if(Constraints.emailAddress(email).isInstanceOf[Invalid] ) {
       Future.successful(Ok(signupFailure + ("cause" -> JsString("wrong email format")) ))
     } else if((env.mode != Mode.Dev || configuration.getBoolean("dev.check.password").getOrElse(false)) 
         && Constraints.pattern("""^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,20}$""".r)(password).isInstanceOf[Invalid]) {
       Future.successful(Ok(signupFailure + ("cause" -> JsString("password must be 6 to 20 characters long, and must contain lower case, upper case, digit and special characters")) ))
     } else {
-      val existingUser = userDao.selectByEmail(email )
-  
-      existingUser flatMap { user => 
-      if(user.isDefined) 
-    	  Future.successful(Ok(signupFailure + ("cause" -> JsString("email already registered")) )) 
-    	  else {
     		  val newUser = userDao.insert(User(0, email, password, "user"))
-    		  Logger.debug("new user: " + newUser)
-    		  newUser map { user2 => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))}
-    	  }
-      }
+    		  newUser map { _ match {
+    		    case Success(user2) => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))
+    		    case Failure(InsertDuplicateException(_, _, _)) => Ok(signupFailure + ("cause" -> JsString("email already registered")))
+    		    case Failure(e) => InternalServerError(signupFailure)
+    		  } 
+    		  }
+
     }
     
     

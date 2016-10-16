@@ -12,6 +12,8 @@ import slick.profile.BasicProfile
 import models.User
 import org.mockito.internal.matchers.GreaterThan
 import com.github.t3hnar.bcrypt.Password
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class UserDaoSpec extends PlaySpec with OneAppPerSuite {
   object dbConfigProvider extends DatabaseConfigProvider {
@@ -23,9 +25,19 @@ class UserDaoSpec extends PlaySpec with OneAppPerSuite {
       val userDao = new UserDao(dbConfigProvider)
       val newUser = userDao.insert(User(0, "a@a.a", "a", "user"))
       newUser.map { user =>
-    	  user.id must be > 0L
-    	  "a".isBcrypted( user.password )
+        user.isSuccess must be 
+    	  user.get.id must be > 0L
+    	  "a".isBcrypted( user.get.password )
       }
     }
   }
+  
+    "not insert a user twice" in {
+      val userDao = new UserDao(dbConfigProvider)
+      val newUser = userDao.insert(User(0, "a@a.a", "a", "user"))
+      newUser.map { user => 
+        user.isFailure must be
+      } 
+    }
+  
 }

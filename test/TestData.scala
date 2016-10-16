@@ -31,9 +31,9 @@ trait TestData {
 			  existing <- userDao.selectByEmail("test@test.test") if existing.isEmpty;
 			  user <- userDao.insert(User(0, "test@test.test", "Test_123", "user"));
 			  user2 <- userDao.insert(User(0, "test2@test.test", "Test_1223", "user"));
-			  note <- noteDao.insert(Note(0, user.id, "text", "title", "lore ipsum", Array[Byte](), now, now) ) ;
-			  note2 <- noteDao.insert(Note(0, user.id, "text", "title2", "lore ipsum", Array[Byte](), now, now) ) ;
-			  note3 <- noteDao.insert(Note(0, user2.id, "text", "title3", "lore ipsum", Array[Byte](), now, now) ) 
+			  note <- noteDao.insert(Note(0, user.get.id, "text", "title", "lore ipsum", Array[Byte](), now, now) ) ;
+			  note2 <- noteDao.insert(Note(0, user.get.id, "text", "title2", "lore ipsum", Array[Byte](), now, now) ) ;
+			  note3 <- noteDao.insert(Note(0, user2.get.id, "text", "title3", "lore ipsum", Array[Byte](), now, now) ) 
 			  ) yield {
 	    noteId1 = note
 	    noteId2 = note2

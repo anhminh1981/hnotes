@@ -20,7 +20,7 @@ class DevData @Inject() (userDao: UserDao, noteDao: NoteDao) {
   val result = for(
       existing <- userDao.selectByEmail("test@test.test") if existing.isEmpty;
       user <- userDao.insert(User(0, "test@test.test", "test", "user"));
-      note <- noteDao.insert(Note(0, user.id, "text", "title", "lore ipsum", Array[Byte](), now, now) ) ) yield note
+      note <- noteDao.insert(Note(0, user.get.id, "text", "title", "lore ipsum", Array[Byte](), now, now) ) ) yield note
   
   result.onComplete {
     case Success(n) => {
