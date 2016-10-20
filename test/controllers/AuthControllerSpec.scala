@@ -4,7 +4,7 @@ import scala.concurrent.ExecutionContext.Implicits._
 
 import org.joda.time.DateTimeUtils
 import org.mockito.Mockito._
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
@@ -44,6 +44,8 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
   private var controller = null: AuthController
   
   override def beforeEach() = { 
+    when(configuration.getString("auth0.domain")) thenReturn None
+    
     when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
     userDao = mock[UserDao]
     controller = new AuthController(userDao)

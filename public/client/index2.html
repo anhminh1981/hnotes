@@ -16,14 +16,19 @@
 	<script>
 	tinymce.init({
 	    selector: '#test',
-	    inline:true,
-	    menubar: false
+	    inline: false,
+	    menubar: false,
+	    statusbar: false,
+	    fixed_toolbar_container: '#mytoolbar',
+	    height: 200
 	  });
 	</script>
     
   </head>
 
   <body >
-  	<div id="test" contenteditable="true" >azerty</div>
+  	<div id="mytoolbar"></div>
+  	<div id="title">Title</div>
+  	<div id="test" contenteditable="true" style="height: 200px; background-color: lightgrey">azerty</div>
   </body>
 </html>
