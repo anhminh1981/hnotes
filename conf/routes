@@ -24,3 +24,5 @@ GET		/test						controllers.AuthController.test()
 GET		/notes						controllers.NoteController.notes
 GET		/notes/:noteId				controllers.NoteController.note(noteId: Long)
 POST	/notes						controllers.NoteController.edit
+
+POST	/auth0Login					controllers.AuthController.auth0Login

@@ -1,8 +1,10 @@
 <ion-view view-title="Editor">
   <ion-content>
   	<div class="note">
-	  	<div id="note_title" contenteditable="true" ></div>
-	  	<div id="editor" contenteditable="true"></div>
+  		<div id="toolbar"></div>
+	  	<div id="title" contenteditable="true" ng-model="title"></div>
+	  	<textarea id="editor"></textarea>
+	  	<div ng-bind="saveState"></div>
   	</div>
   </ion-content>
  </ion-view>

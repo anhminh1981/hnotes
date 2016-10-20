@@ -23,6 +23,7 @@ class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   def all(): Future[Seq[User]] = db.run(Users.result)
   
   def selectByEmail(email: String): Future[Option[User]] = {
+    Logger.debug(s"Looking for $email")
     val query = Users.filter (_.email === email )
     db.run(query.result ) map { seq => if(seq.isEmpty) None else Some(seq.head)}
   }
