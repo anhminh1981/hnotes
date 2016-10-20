@@ -29,3 +29,5 @@ flatten in EditSource := true
 (compile in Compile) <<= (compile in Compile) dependsOn (edit in EditSource)
 
 fork in run := true
+
+fork in run := true

@@ -4,7 +4,7 @@ import scala.concurrent.ExecutionContext.Implicits._
 
 import org.joda.time.DateTimeUtils
 import org.mockito.Mockito._
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
