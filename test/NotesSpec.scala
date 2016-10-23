@@ -28,7 +28,7 @@ class NotesSpec extends PlaySpec with OneAppPerSuite with TestData  {
     }
     
     "return the list of notes owned by the user designated by the token" in {
-      val request = new FakeRequest(GET, "/notes", headers = FakeHeaders(Seq("Authorization" -> token)), body = "")
+      val request = new FakeRequest(GET, "/notes", headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
       
       val result = route(app, request).get
       
@@ -48,13 +48,13 @@ class NotesSpec extends PlaySpec with OneAppPerSuite with TestData  {
   
   "/notes/id" should {
     "forbid the consultation of notes not owned by the user" in {
-      val request = new FakeRequest(GET, "/notes/" + noteId3, headers = FakeHeaders(Seq("Authorization" -> token)), body = "")
+      val request = new FakeRequest(GET, "/notes/" + noteId3, headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
       val result = route(app, request).get
       
       status(result) mustBe FORBIDDEN
     }
     "return the note if it's owned by the user" in {
-      val request = new FakeRequest(GET, "/notes/" + noteId2, headers = FakeHeaders(Seq("Authorization" -> token)), body = "")
+      val request = new FakeRequest(GET, "/notes/" + noteId2, headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
       val result = route(app, request).get
       
       status(result) mustBe OK

@@ -5,7 +5,7 @@ angular.module('hnotes.filters', ['ionic'])
 		request: function(config) {
             config.headers = config.headers || {};
             if ($window.localStorage.getItem('token')) {
-                config.headers.authorization = $window.localStorage.getItem('token');
+                config.headers.authorization = 'Bearer ' + $window.localStorage.getItem('token');
             }
             return config;
 		}

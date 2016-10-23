@@ -125,6 +125,7 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
 object AuthConstants { 
   val algo = JwtAlgorithm.HS256
   val duration =  365 * 3600 * 1000L // 365 jours en millis
+  val authPrefix = "Bearer "
 }
 
 
@@ -139,9 +140,10 @@ trait Secured  {
 	
 	
 	def getUserFromRequest[A](requestHeader: RequestHeader) = {
-		for(token <- requestHeader.headers.get("authorization");
+		for(authorization <- requestHeader.headers.get("authorization") if authorization startsWith AuthConstants.authPrefix;
 				secret <- secretOption;
-				claim <- JwtJson.decodeJson(token, secret, Seq(AuthConstants.algo)).toOption if(claim \ "iss").asOpt[String] == Some("hnotes");
+				claim <- JwtJson.decodeJson(authorization.substring(AuthConstants.authPrefix.length()).trim(), 
+				    secret, Seq(AuthConstants.algo)).toOption if(claim \ "iss").asOpt[String] == Some("hnotes");
 				iat <- (claim \ "iat").asOpt[Long] if  Instant.now().getMillis < iat + AuthConstants.duration ) 
 			yield User((claim \ "userId").as[Long], null, null, (claim \ "role").as[String])
 	}

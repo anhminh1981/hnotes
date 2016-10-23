@@ -79,7 +79,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
       val header = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
       val claim = "eyJpYXQiOjE0NzM4NzQyNDEwMjYsImlzcyI6Imhub3RlcyIsInVzZXJJZCI6Miwicm9sZSI6InVzZXIifQ"
       val signature = "kHOkwcTWLOOikw4PQ0XkD7cUHbb7otiIvV_td1wTnVs"
-      val request = new FakeRequest(GET, "/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
+      val request = new FakeRequest(GET, "/test" , headers = Headers("authorization" -> s"Bearer $header.$claim.$signature"), body = "")
       
       val secure = new SecuredImpl
       

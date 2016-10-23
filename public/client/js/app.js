@@ -77,5 +77,29 @@ angular.module('hnotes', ['ionic', 'hnotes.controllers', 'hnotes.config', 'hnote
 	// if none of the above states are matched, use this as the fallback
 	$urlRouterProvider.otherwise('/auth');
 } )
+.directive("contenteditable", function() {
+  return {
+    restrict: "A",
+    require: "ngModel",
+    link: function(scope, element, attrs, ngModel) {
 
+      function read() {
+        ngModel.$setViewValue(element.html());
+        console.log("read " + scope.title);
+      }
+
+      ngModel.$render = function() {
+    	  console.log("render " + ngModel.$viewValue);
+    	  console.log(scope.title);
+    	  console.log(scope.test);
+        element.html(ngModel.$viewValue || "");
+      };
+
+      element.bind("blur keyup change", function() {
+    	  console.log("bind");
+        scope.$apply(read);
+      });
+    }
+  };
+})
 ;
