@@ -86,10 +86,11 @@ angular.module('hnotes.notes', ['hnotes.config'])
 			})
 		}
 	
-		$scope.test = "testsetestset";
+		
 		$scope.save = function() {
 			// TODO add dirty checking of title and text
 			var id = Number($stateParams.id)
+			$scope.title = angular.element(document.getElementById('title')).text();
 			var note = {id: id, title: $scope.title, text: $scope.editor.getData()}
 			console.log("save: " + JSON.stringify(note))
 			// TODO reset dirty for title and text
@@ -111,3 +112,4 @@ angular.module('hnotes.notes', ['hnotes.config'])
 		})
 
 })
+;
