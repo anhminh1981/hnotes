@@ -4,7 +4,7 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   cache,
@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.187",
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
   "com.pauldijou" %% "jwt-play-json" % "0.8.0",
-  "org.mockito" % "mockito-core" % "2.2.5",
+  "org.mockito" % "mockito-core" % "2.2.9",
   "com.github.t3hnar" %% "scala-bcrypt" % "2.6"
 )
 
@@ -27,6 +27,8 @@ flatten in EditSource := true
 
 
 (compile in Compile) <<= (compile in Compile) dependsOn (edit in EditSource)
+
+fork in run := true
 
 fork in run := true
 
