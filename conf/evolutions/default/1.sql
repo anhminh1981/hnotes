@@ -2,7 +2,7 @@
 
 # --- !Ups
 
-CREATE TABLE "users" (
+CREATE TABLE "USERS" (
 	"ID" SERIAL, 
 	"EMAIL" varchar(255) UNIQUE NOT NULL, 
 	"PASSWORD" varchar(255) NOT NULL, 
