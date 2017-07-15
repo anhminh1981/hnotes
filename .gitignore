@@ -23,3 +23,4 @@ project/eclipse.sbt
 .history
 public/client/js/config.js
 .tmpBin/
+/package-lock.json

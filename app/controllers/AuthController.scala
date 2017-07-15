@@ -32,7 +32,7 @@ import dao.exception.InsertDuplicateException
 
 
 @Singleton
-class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration, env: Environment) extends Controller with Secured {
+class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration, implicit val env: Environment) extends Controller with Secured {
   val signupSuccess = Json.obj("request" -> "signup", "status" -> "OK")
   val signupFailure = Json.obj("request" -> "signup", "status" -> "KO")
   val loginSuccess = Json.obj("request" -> "login", "status" -> "OK")
@@ -134,18 +134,25 @@ object AuthConstants {
 
 trait Secured  {
   implicit val configuration: Configuration
+  implicit val env: Environment
+  
   
 	private lazy val secretOption = configuration.getString("play.crypto.secret")
 	
 	
 	
 	def getUserFromRequest[A](requestHeader: RequestHeader) = {
-		for(authorization <- requestHeader.headers.get("authorization") if authorization startsWith AuthConstants.authPrefix;
-				secret <- secretOption;
-				claim <- JwtJson.decodeJson(authorization.substring(AuthConstants.authPrefix.length()).trim(), 
-				    secret, Seq(AuthConstants.algo)).toOption if(claim \ "iss").asOpt[String] == Some("hnotes");
-				iat <- (claim \ "iat").asOpt[Long] if  Instant.now().getMillis < iat + AuthConstants.duration ) 
-			yield User((claim \ "userId").as[Long], null, null, (claim \ "role").as[String])
+    if(env.mode == Mode.Dev && configuration.getBoolean("dev.auth.skip").getOrElse(false)) {
+      Some(User(0, "test@test.test", null, "user"))
+    } else {
+    	for(authorization <- requestHeader.headers.get("authorization") if authorization startsWith AuthConstants.authPrefix;
+    			secret <- secretOption;
+    			claim <- JwtJson.decodeJson(authorization.substring(AuthConstants.authPrefix.length()).trim(), 
+    					secret, Seq(AuthConstants.algo)).toOption if(claim \ "iss").asOpt[String] == Some("hnotes");
+    			iat <- (claim \ "iat").asOpt[Long] if  Instant.now().getMillis < iat + AuthConstants.duration ) 
+    		yield User((claim \ "userId").as[Long], null, null, (claim \ "role").as[String])
+    }
+      
 	}
   
 	object Authenticated extends AuthenticatedBuilder(getUserFromRequest, _ => Results.Unauthorized)

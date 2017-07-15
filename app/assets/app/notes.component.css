@@ -1,0 +1,24 @@
+#notes-component {
+	padding-left:250px;
+    position: relative;
+}
+
+#notes-list {
+	position: fixed;
+    top: 0;
+    bottom: 0;
+    overflow: auto;
+    margin-left:-250px; /* "left col (nav + list)" width */
+    width: 200px;
+    height: 100%;
+}
+
+.note {
+    position: fixed;
+    top: 10%;
+    right: 0;
+    bottom: 0;
+    left: 250px;
+    overflow: auto;
+    width: auto; /* so that it's not 100% */
+}

@@ -1,0 +1,9 @@
+<div id="notes-component">
+	<ul class="notes w3-ul w3-border" id="notes-list">
+	  <li *ngFor="let note of notes" (click)="onSelect(note)"
+	      [class.selected]="note === selectedNote">
+	    <span>{{note.title}}</span>
+	  </li>
+	</ul>
+	<note [note]="selectedNote" ></note>
+</div>
