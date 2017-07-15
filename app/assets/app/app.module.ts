@@ -19,6 +19,7 @@ import { NoteEditorComponent }		from './note-editor.component';
     FormsModule,
     HttpModule,
     AppRoutingModule,
+    CKEditorModule,
   ],
   declarations: [
     AppComponent,

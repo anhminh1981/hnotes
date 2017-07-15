@@ -13,6 +13,7 @@ export class NoteEditorComponent  {
   @Input() public note: Note;
 
   constructor(
-    private router: Router) { }
+    private router: Router) {
+    }
 
 }

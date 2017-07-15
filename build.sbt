@@ -39,7 +39,7 @@ libraryDependencies ++= Seq(
 	"org.webjars.npm" % "typescript" % "2.2.1",
 	
 	"org.webjars" % "ckeditor" % "4.7.0",
-	"org.webjars.npm" % "ng2-ckeditor" % "1.1.9",
+	"org.webjars.npm" % "ng2-ckeditor" % "1.1.5",
 	
 	//tslint dependency
 	"org.webjars.npm" % "tslint-eslint-rules" % "3.4.0",

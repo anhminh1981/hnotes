@@ -2,5 +2,19 @@
   <h2>
     {{note.title | uppercase}}
   </h2>
-  <div>{{note.text }}</div>
+  <div id="editor-container">
+	  <ckeditor
+	    [(ngModel)]="note.text "
+	    [config]="{toolbar : [
+				{ name: 'clipboard', items: [ 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo' ] },
+				{ name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] },
+				{ name: 'tools', items: [ 'Maximize' ] },
+				{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', '-', 'RemoveFormat' ] },
+				{ name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote' ] },
+				{ name: 'styles', items: [ 'Styles', 'Format' ] }
+			],
+			removeButtons : 'Subscript,Superscript,Scayt,Anchor,Image,SpecialChar,HorizontalRule,Table,Source,About'}  "
+	    debounce="500">
+  	  </ckeditor>
+  </div>
 </div>

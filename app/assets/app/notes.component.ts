@@ -25,6 +25,6 @@ export class NotesComponent implements OnInit {
   }
 
   private getNotes(): void {
-    this.notes = [{id: 0, title: 'test note', text: 'lore ipsum'}, {id: 1, title: 'test note 2', text: 'lore ipsum'} ];
+    this.notes = [{id: 0, title: 'test note', text: 'lore ipsum'}, {id: 1, title: 'test note 2', text: 'azertyu'} ];
   }
 }
