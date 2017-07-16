@@ -5,5 +5,5 @@
 	    <span>{{note.title}}</span>
 	  </li>
 	</ul>
-	<note [note]="selectedNote" ></note>
+	<note *ngIf="selectedNote" [noteId]="selectedNote.id" ></note>
 </div>

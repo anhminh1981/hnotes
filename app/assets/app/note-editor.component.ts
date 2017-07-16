@@ -1,19 +1,32 @@
-import { Component, Input  } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges  } from '@angular/core';
 import { Router }            from '@angular/router';
 
 import { Note }				 from './note';
+import { NoteService } from './notes.service';
 
 @Component({
   selector: 'note',
   templateUrl: 'assets/app/note-editor.component.html',
   styleUrls: [ 'assets/app/note-editor.component.css' ],
 })
-export class NoteEditorComponent  {
+export class NoteEditorComponent implements OnChanges {
 
-  @Input() public note: Note;
+  @Input() public noteId: number;
+
+  private note: Note;
 
   constructor(
+    private noteService: NoteService,
     private router: Router) {
-    }
+  }
 
+  public ngOnChanges(changes: SimpleChanges) {
+    console.log('ngOnChanges ' + JSON.stringify(changes));
+    this.noteService.getNote(this.noteId).then(note => this.note = note);
+  }
+
+  public save() {
+    console.log('saving');
+    this.noteService.update(this.note);
+  }
 }

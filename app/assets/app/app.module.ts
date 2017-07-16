@@ -12,6 +12,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent }         from './app.component';
 import { NotesComponent }		from './notes.component';
 import { NoteEditorComponent }		from './note-editor.component';
+import { NoteService } from './notes.service';
+import { ContenteditableModel } from './contenteditable-model';
 
 @NgModule({
   imports: [
@@ -25,8 +27,9 @@ import { NoteEditorComponent }		from './note-editor.component';
     AppComponent,
     NotesComponent,
     NoteEditorComponent,
+    ContenteditableModel,
   ],
-  providers: [  ],
+  providers: [ NoteService ],
   bootstrap: [ AppComponent ],
 })
 export class AppModule { }

@@ -26,14 +26,14 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   private val Notes = TableQuery[NotesTable]
   
   def allFromUser(ownerId: Long, order: NoteDao.NoteOrder = NoteDao.lastModified): Future[Seq[Note]] = { 
-    val query = Notes.filter(_.owner === ownerId)
+    val query = Notes //.filter(_.owner === ownerId)
     val queryWithOrder = order match {
       case NoteDao.lastModified => query.sortBy { _.modifiedAt.desc }
       case NoteDao.titleDesc => query.sortBy { _.title.desc.nullsFirst }
       case NoteDao.titleAsc => query.sortBy { _.title.asc.nullsLast }
     }
-    val mappedQuery = queryWithOrder.map(note => (note.id, note.typeNote, note.title, note.text, note.createdAt, note.modifiedAt))
-    db.run(mappedQuery.result) map { _ map { case (id, typeNote, title, text, createdAt, modifiedAt) => Note(id, ownerId, typeNote, title, text, null, createdAt, modifiedAt) } }
+    val mappedQuery = queryWithOrder.map(note => (note.id, note.owner, note.typeNote, note.title, note.text, note.createdAt, note.modifiedAt))
+    db.run(mappedQuery.result) map { _ map { case (id, owner, typeNote, title, text, createdAt, modifiedAt) => Note(id, owner, typeNote, title, text, null, createdAt, modifiedAt) } }
   }
   
   def getById(id: Long): Future[Option[Note]] = {
@@ -52,8 +52,6 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   }
   
   private class NotesTable(tag: Tag) extends Table[Note](tag, "NOTES") {
-
-    
 
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
     def owner = column[Long]("OWNER")

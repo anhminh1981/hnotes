@@ -3,6 +3,7 @@ import { Router }            from '@angular/router';
 
 import { Note }				 from './note';
 import { NoteEditorComponent }		from './note-editor.component';
+import { NoteService } from './notes.service';
 
 @Component({
   selector: 'notes',
@@ -14,6 +15,7 @@ export class NotesComponent implements OnInit {
   public selectedNote: Note;
 
   constructor(
+    private noteService: NoteService,
     private router: Router) { }
 
   public ngOnInit(): void {
@@ -25,6 +27,6 @@ export class NotesComponent implements OnInit {
   }
 
   private getNotes(): void {
-    this.notes = [{id: 0, title: 'test note', text: 'lore ipsum'}, {id: 1, title: 'test note 2', text: 'azertyu'} ];
+    this.noteService.getNotes().then(notes => this.notes = notes);
   }
 }

@@ -143,7 +143,7 @@ trait Secured  {
 	
 	def getUserFromRequest[A](requestHeader: RequestHeader) = {
     if(env.mode == Mode.Dev && configuration.getBoolean("dev.auth.skip").getOrElse(false)) {
-      Some(User(0, "test@test.test", null, "user"))
+      Some(User(1, "test@test.test", null, "user"))
     } else {
     	for(authorization <- requestHeader.headers.get("authorization") if authorization startsWith AuthConstants.authPrefix;
     			secret <- secretOption;

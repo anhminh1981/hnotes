@@ -34,6 +34,7 @@
     "ordered-imports": false,
     "arrow-parens": false,
     "object-literal-shorthand": false,
-    "import-spacing": false
+    "import-spacing": false,
+    "no-console": false
   }
 }

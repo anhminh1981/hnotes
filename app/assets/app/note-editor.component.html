@@ -1,7 +1,6 @@
 <div *ngIf="note" class="note" >
-  <h2>
-    {{note.title | uppercase}}
-  </h2>
+  <h2 contenteditable="true" [(contenteditableModel)]="note.title"></h2>
+
   <div id="editor-container">
 	  <ckeditor
 	    [(ngModel)]="note.text "
@@ -14,6 +13,7 @@
 				{ name: 'styles', items: [ 'Styles', 'Format' ] }
 			],
 			removeButtons : 'Subscript,Superscript,Scayt,Anchor,Image,SpecialChar,HorizontalRule,Table,Source,About'}  "
+      (change)="save()"
 	    debounce="500">
   	  </ckeditor>
   </div>
