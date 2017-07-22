@@ -26,7 +26,7 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   private val Notes = TableQuery[NotesTable]
   
   def allFromUser(ownerId: Long, order: NoteDao.NoteOrder = NoteDao.lastModified): Future[Seq[Note]] = { 
-    val query = Notes //.filter(_.owner === ownerId)
+    val query = Notes.filter(_.owner === ownerId)
     val queryWithOrder = order match {
       case NoteDao.lastModified => query.sortBy { _.modifiedAt.desc }
       case NoteDao.titleDesc => query.sortBy { _.title.desc.nullsFirst }

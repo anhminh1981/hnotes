@@ -10,10 +10,12 @@ import { CKEditorModule } from 'ng2-ckeditor';
 import { AppRoutingModule } from './app-routing.module';
 
 import { AppComponent }         from './app.component';
-import { NotesComponent }		from './notes.component';
-import { NoteEditorComponent }		from './note-editor.component';
-import { NoteService } from './notes.service';
-import { ContenteditableModel } from './contenteditable-model';
+import { NotesComponent }		from './notes/notes.component';
+import { NoteEditorComponent }		from './note-editor/note-editor.component';
+import { NoteService } from './_services/notes.service';
+import { ContenteditableModel } from './_directives/contenteditable-model';
+import { AuthGuard } from './_guards/auth.guard';
+import { AlertService } from './_services/alert.service';
 
 @NgModule({
   imports: [
@@ -29,7 +31,7 @@ import { ContenteditableModel } from './contenteditable-model';
     NoteEditorComponent,
     ContenteditableModel,
   ],
-  providers: [ NoteService ],
+  providers: [ NoteService, AlertService, AuthGuard ],
   bootstrap: [ AppComponent ],
 })
 export class AppModule { }

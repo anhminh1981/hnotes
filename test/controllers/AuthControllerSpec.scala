@@ -79,7 +79,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     
     "need an email" in { 
       val requestBody = Json.obj( "password" -> password )
-      val request = new FakeRequest(POST, "/signup", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       
@@ -104,7 +104,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       
       
-      val request = new FakeRequest(POST, "/signup", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.signup().apply(request)
@@ -125,7 +125,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
-      val request = new FakeRequest(POST, "/signup", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
       
       val result = controller.signup().apply(request)
@@ -133,9 +133,6 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       status(result) mustBe OK
       
       val json = contentAsJson(result)
-      
-      
-      
       
       
       (json \ "request").asOpt[String] mustBe Some( "signup" )
@@ -150,7 +147,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     
     "need an email" in { 
       val requestBody = Json.obj( "password" -> password )
-      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       
@@ -170,7 +167,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     	
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
-      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.login().apply(request)
@@ -194,7 +191,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     	
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
-      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.login().apply(request)
@@ -216,7 +213,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     	
       val requestBody = Json.obj( "email" -> email, "password" -> "not_password" )
       
-      val request = new FakeRequest(POST, "/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.login().apply(request)

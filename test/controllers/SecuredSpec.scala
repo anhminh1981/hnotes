@@ -20,13 +20,16 @@ import models.User
 import play.api.mvc.Results
 import play.api.mvc.Controller
 import org.joda.time.DateTimeUtils
+import play.api.Environment
+
 
 class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
   val secret = "changeme"
   implicit val config = mock[Configuration]
+  implicit val env = mock[Environment]
   when(config.getString("play.crypto.secret")) thenReturn Some(secret)
   
-  class SecuredImpl(implicit val configuration: Configuration) extends Controller with Secured {
+  class SecuredImpl(implicit val configuration: Configuration, implicit val env: Environment) extends Controller with Secured {
     
     def test = Authenticated {
       Ok
@@ -35,7 +38,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
   
   "secure" should { 
     "respond with a 401 to requests without user" in { 
-      val request = FakeRequest(GET, "/test" )
+      val request = FakeRequest(GET, "/api/test" )
       val secure = new SecuredImpl
       val result = secure.test(request)
       
@@ -56,7 +59,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
       val claim = "eyJpYXQiOjE0NzM4NzQyNDEwMjYsImlzcyI6Imhub3RlcyIsInVzZXJJZCI6Miwicm9sZSI6InVzZXIifQ"
       val signature = "kHOkwcTWLOOikw4PQ0XkD7cUHbb7otiIvV_td1wTnVs"
       
-      val request = new FakeRequest(GET, "/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
+      val request = new FakeRequest(GET, "/api/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
       val secure = new SecuredImpl
       val result = secure.test(request)
       
@@ -79,7 +82,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
       val header = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
       val claim = "eyJpYXQiOjE0NzM4NzQyNDEwMjYsImlzcyI6Imhub3RlcyIsInVzZXJJZCI6Miwicm9sZSI6InVzZXIifQ"
       val signature = "kHOkwcTWLOOikw4PQ0XkD7cUHbb7otiIvV_td1wTnVs"
-      val request = new FakeRequest(GET, "/test" , headers = Headers("authorization" -> s"Bearer $header.$claim.$signature"), body = "")
+      val request = new FakeRequest(GET, "/api/test" , headers = Headers("authorization" -> s"Bearer $header.$claim.$signature"), body = "")
       
       val secure = new SecuredImpl
       
@@ -87,7 +90,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
     }
     "not return a user if there's no token" in {
       val secure = new SecuredImpl
-      val request = FakeRequest(GET, "/test" )
+      val request = FakeRequest(GET, "/api/test" )
       
       secure.getUserFromRequest(request) mustBe None
     }
@@ -102,7 +105,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
       val header = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
       val claim = "eyJpYXQiOjE0NzM4NzQyNDEwMjYsImlzcyI6Imhub3RlcyIsInVzZXJJZCI6Miwicm9sZSI6InVzZXIifQ"
       val signature = "kHOkwcTWLOOikw4PQ0XkD7cUHbb7otiIvV_td1wTnVs"
-      val request = new FakeRequest(GET, "/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
+      val request = new FakeRequest(GET, "/api/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
       
       val secure = new SecuredImpl
       
@@ -118,7 +121,7 @@ class SecuredSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
     			val header = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
     			val claim = "eyJpYXQiOjE0NzM4NzQyNDEwMjYsImlzcyI6Imhub3RlcyIsInVzZXJJZCI6Miwicm9sZSI6InVzZXIifQ"
     			val signature = "wrongcTWLOOikw4PQ0XkD7cUHbb7otiIvV_td1wTnVs"
-    			val request = new FakeRequest(GET, "/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
+    			val request = new FakeRequest(GET, "/api/test" , headers = Headers("authorization" -> s"$header.$claim.$signature"), body = "")
     	
     	val secure = new SecuredImpl
     	
