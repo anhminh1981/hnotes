@@ -3,9 +3,7 @@ package controllers
 import javax.inject.{Inject, Singleton}
 import play.api._
 import play.api.mvc._
-import play.api.mvc.BodyParsers.parse
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import dao.UserDao
 import models.User
 
@@ -29,17 +27,21 @@ import play.api.data.validation.Invalid
 import scala.util.Success
 import scala.util.Failure
 import dao.exception.InsertDuplicateException
+import play.api.data.validation.Constraint
+import views.html.defaultpages.unauthorized
+import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 
 
 @Singleton
-class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration, implicit val env: Environment) extends Controller with Secured {
+class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: Configuration, val env: Environment, val ec: ExecutionContext, val mat: Materializer) extends  Secured {
   val signupSuccess = Json.obj("request" -> "signup", "status" -> "OK")
   val signupFailure = Json.obj("request" -> "signup", "status" -> "KO")
   val loginSuccess = Json.obj("request" -> "login", "status" -> "OK")
   val loginFailure = Json.obj("request" -> "login", "status" -> "KO")
     
   // Lazy so the mock can be told what to do after instanciation in the tests
-  lazy val secretOption = configuration.getString("play.crypto.secret")
+  lazy val secretOption = configuration.getOptional[String]("play.crypto.secret")
   
   
   implicit val userWrites: Writes[User] = ( 
@@ -76,9 +78,10 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
 
   def signup = commonNeedPasswordAndEmail { (email, password) => 
     Logger.debug("signup")
-    if(Constraints.emailAddress(email).isInstanceOf[Invalid] ) {
+    val emailVal: Constraint[String] = Constraints.emailAddress
+    if(emailVal(email).isInstanceOf[Invalid] ) {
       Future.successful(Ok(signupFailure + ("cause" -> JsString("wrong email format")) ))
-    } else if((env.mode != Mode.Dev || configuration.getBoolean("dev.check.password").getOrElse(false)) 
+    } else if((env.mode != Mode.Dev || configuration.getOptional[Boolean]("dev.check.password").getOrElse(false)) 
         && Constraints.pattern("""^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,20}$""".r)(password).isInstanceOf[Invalid]) {
       Future.successful(Ok(signupFailure + ("cause" -> JsString("password must be 6 to 20 characters long, and must contain lower case, upper case, digit and special characters")) ))
     } else {
@@ -115,10 +118,11 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
     }
   }
   
-  def test = Authenticated { implicit request =>
+  def test = authenticated { implicit request =>
     Logger.debug(request.user.toString())
     Ok("ok")
   }
+  
   
 }
 
@@ -132,21 +136,19 @@ object AuthConstants {
 
 
 
-trait Secured  {
-  implicit val configuration: Configuration
-  implicit val env: Environment
-  
-  
-	private lazy val secretOption = configuration.getString("play.crypto.secret")
-	
+trait Secured extends InjectedController {
+  val configuration: Configuration
+  val env: Environment
+  implicit val ec: ExecutionContext
+	implicit val mat: Materializer
 	
 	
 	def getUserFromRequest[A](requestHeader: RequestHeader) = {
-    if(env.mode == Mode.Dev && configuration.getBoolean("dev.auth.skip").getOrElse(false)) {
+    if(env.mode == Mode.Dev && configuration.getOptional[Boolean]("dev.auth.skip").getOrElse(false)) {
       Some(User(1, "test@test.test", null, "user"))
     } else {
     	for(authorization <- requestHeader.headers.get("authorization") if authorization startsWith AuthConstants.authPrefix;
-    			secret <- secretOption;
+    			secret <- configuration.getOptional[String]("play.crypto.secret");
     			claim <- JwtJson.decodeJson(authorization.substring(AuthConstants.authPrefix.length()).trim(), 
     					secret, Seq(AuthConstants.algo)).toOption if(claim \ "iss").asOpt[String] == Some("hnotes");
     			iat <- (claim \ "iat").asOpt[Long] if  Instant.now().getMillis < iat + AuthConstants.duration ) 
@@ -155,7 +157,11 @@ trait Secured  {
       
 	}
   
-	object Authenticated extends AuthenticatedBuilder(getUserFromRequest, _ => Results.Unauthorized)
+	class Authenticated(implicit val ec: ExecutionContext, implicit val mat: Materializer) 
+	  extends AuthenticatedBuilder[User](getUserFromRequest, new BodyParsers.Default)(ec) {
+  }
+  
+	def authenticated = new Authenticated
 	
 	type UserRequest[A] = AuthenticatedRequest[A, User]
 }

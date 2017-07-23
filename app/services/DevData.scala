@@ -7,14 +7,14 @@ import dao.NoteDao
 import models.User
 import models.Note
 
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.util.Success
 import scala.util.Failure
 import play.api.Logger
 import org.joda.time.Instant
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class DevData @Inject() (userDao: UserDao, noteDao: NoteDao) {
+class DevData @Inject() (userDao: UserDao, noteDao: NoteDao)(implicit val ec: ExecutionContext) {
   val now = Instant.now().toDateTime()
   val text = """
     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas convallis magna ullamcorper, semper orci sit amet, 

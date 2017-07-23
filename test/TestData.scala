@@ -1,9 +1,8 @@
-import slick.profile.BasicProfile
+import slick.basic.BasicProfile
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.Application
 import dao.UserDao
 import dao.NoteDao
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import models._
 import scala.util.Success
 import scala.util.Failure
@@ -11,15 +10,16 @@ import play.api.Logger
 import org.joda.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import play.api.Play
+import dao.UserDao
+import scala.concurrent.ExecutionContext
 
 
 trait TestData {
   implicit val app: Application
-  object dbConfigProvider extends DatabaseConfigProvider {
-    def get[P <: BasicProfile] = DatabaseConfigProvider.get
-  }
-  val userDao = new UserDao(dbConfigProvider)
-  val noteDao = new NoteDao(dbConfigProvider)
+  val userDao = app.injector.instanceOf[UserDao]
+  val noteDao = app.injector.instanceOf[NoteDao]
+  implicit val ec = app.injector.instanceOf[ExecutionContext] 
   private val now = Instant.now().toDateTime()
   
   var noteId1: Long = 0

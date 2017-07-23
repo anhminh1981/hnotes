@@ -5,8 +5,7 @@ import scala.concurrent.Future
 
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import com.github.t3hnar.bcrypt._
 
 import models.User
@@ -14,9 +13,10 @@ import play.api.Logger
 import scala.util.Try
 import scala.util.Failure
 import dao.exception.InsertDuplicateException
+import scala.concurrent.ExecutionContext
 
-class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
-  import driver.api._
+class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit val ec: ExecutionContext) extends HasDatabaseConfigProvider[JdbcProfile] {
+  import profile.api._
   
   private val Users = TableQuery[UsersTable]
     

@@ -5,17 +5,17 @@ import scala.concurrent.Future
 
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfigProvider
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import models.Note
 import java.sql.Timestamp
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone.UTC
 import org.joda.time.Instant
+import scala.concurrent.ExecutionContext
 
 
-class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile]{
-  import driver.api._
+class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit val ec: ExecutionContext) extends HasDatabaseConfigProvider[JdbcProfile]{
+  import profile.api._
   
   implicit def dateTime  =
         MappedColumnType.base[DateTime, Timestamp](

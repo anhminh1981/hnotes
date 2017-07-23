@@ -3,12 +3,9 @@ package controllers
 import javax.inject.Inject
 import dao.NoteDao
 import scala.concurrent.{ ExecutionContext, Future, Promise }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.Controller
 import play.api.Configuration
 import play.api.mvc.Action
 import scala.concurrent.Future
-import play.api.mvc.BodyParsers.parse
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import play.api.libs.json._
@@ -23,9 +20,10 @@ import play.api.mvc.ActionFilter
 import play.api.mvc.Result
 import play.api.Logger
 import play.api.Environment
+import akka.stream.Materializer
 
-class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Configuration, implicit val env: Environment)
-    extends Controller with Secured {
+class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Configuration, val env: Environment, val ec: ExecutionContext, val mat: Materializer)
+    extends Secured {
   val summaryLength = 20
   val updateSuccess = Json.obj("request" -> "update", "status" -> "OK")
   val noteWrites = new Writes[Note] {
@@ -56,7 +54,7 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
     }
   }
 
-  def notes = Authenticated.async { implicit request =>
+  def notes = authenticated.async { implicit request =>
     implicit val writes = summaryNoteWrites
     val notes = noteDao.allFromUser(request.user.id);
     notes map {
@@ -72,6 +70,7 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
   }
 
   def ItemAction(itemId: Long) = new ActionRefiner[UserRequest, ItemRequest] {
+    override def executionContext = ec
     def refine[A](request: UserRequest[A]) = {
       noteDao.getById(itemId).map {
         _ map { new ItemRequest(_, request) } toRight (NotFound)
@@ -80,6 +79,7 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
   }
 
   object PermissionCheckAction extends ActionFilter[ItemRequest] {
+    override def executionContext = ec
     def filter[A](request: ItemRequest[A]) = Future.successful {
       if (request.item.owner != request.user.id)
         Some(Forbidden)
@@ -87,11 +87,12 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
         None
     }
   }
-  def note(noteId: Long) = (Authenticated andThen ItemAction(noteId) andThen PermissionCheckAction) { implicit request =>
+  def note(noteId: Long) = (authenticated andThen ItemAction(noteId) andThen PermissionCheckAction) { implicit request =>
     Ok(Json.toJson(request.item)(noteWrites))
   }
 
   object NotePostAction extends ActionRefiner[UserRequest, ItemRequest] {
+    override def executionContext = ec
     def refine[A](request: UserRequest[A]): Future[Either[Result, ItemRequest[A]]] = {
       if (request.body.isInstanceOf[JsValue]) {
         val body = request.body.asInstanceOf[JsValue]
@@ -116,7 +117,7 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
     }
   }
 
-  def edit = (Authenticated andThen NotePostAction andThen PermissionCheckAction).async(parse.json) { implicit request =>
+  def edit = (authenticated andThen NotePostAction andThen PermissionCheckAction).async(parse.json) { implicit request =>
     val body = request.body
 
     val oldNote = request.item // uselessfor now

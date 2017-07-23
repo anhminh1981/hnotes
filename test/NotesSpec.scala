@@ -3,14 +3,15 @@ import play.api.test._
 import play.api.test.Helpers._
 import play.api.libs.json.Json
 import play.api.libs.json.JsObject
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 
-class NotesSpec extends PlaySpec with OneAppPerSuite with TestData  {
+class NotesSpec extends PlaySpec with GuiceOneAppPerSuite with TestData  {
   insertData
   val token = {
     val requestBody = Json.obj( "email" -> "test@test.test", "password" -> "Test_123" )
       
-    val request = new FakeRequest(POST, "/api/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+    val request = FakeRequest(POST, "/api/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
         body =  requestBody )
      
     val result = route(app, request).get
@@ -28,7 +29,7 @@ class NotesSpec extends PlaySpec with OneAppPerSuite with TestData  {
     }
     
     "return the list of notes owned by the user designated by the token" in {
-      val request = new FakeRequest(GET, "/api/notes", headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
+      val request = FakeRequest(GET, "/api/notes", headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
       
       val result = route(app, request).get
       
@@ -48,13 +49,13 @@ class NotesSpec extends PlaySpec with OneAppPerSuite with TestData  {
   
   "/notes/id" should {
     "forbid the consultation of notes not owned by the user" in {
-      val request = new FakeRequest(GET, "/api/notes/" + noteId3, headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
+      val request = FakeRequest(GET, "/api/notes/" + noteId3, headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
       val result = route(app, request).get
       
       status(result) mustBe FORBIDDEN
     }
     "return the note if it's owned by the user" in {
-      val request = new FakeRequest(GET, "/api/notes/" + noteId2, headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
+      val request = FakeRequest(GET, "/api/notes/" + noteId2, headers = FakeHeaders(Seq("Authorization" -> s"Bearer $token")), body = "")
       val result = route(app, request).get
       
       status(result) mustBe OK

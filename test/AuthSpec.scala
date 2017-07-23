@@ -5,9 +5,10 @@ import play.api.mvc.Headers
 import play.api.libs.json.Json
 import scala.concurrent.Future
 import play.api.mvc.Result
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 
-class AuthSpec extends PlaySpec with OneAppPerSuite {
+class AuthSpec extends PlaySpec with GuiceOneAppPerSuite {
   
   def checkKo(result: Future[Result], method: String , expectedCause: String): Unit = {
     status(result) mustBe OK
@@ -38,7 +39,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
    "signup" must {
      val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "Aa123_4567" )
       
-     val request = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+     val request = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
          body =  requestBody )
      
      "signup a user" in {
@@ -59,7 +60,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the email format" in {
        val requestBodyF = Json.obj( "email" -> "a_a.a", "password" -> "Aa123_4567" )
       
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", "wrong email format")
@@ -69,7 +70,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the password is more than 5 characters" in {
        val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "aB3!!" )
     
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", passwordError)
@@ -78,7 +79,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the password is less than 21 characters" in {
        val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "aB3!!aB3!!aB3!!aB3!!a" )
     
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", passwordError)
@@ -87,7 +88,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the password has at least one lower case character" in {
        val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "ABC123!" )
     
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", passwordError)
@@ -96,7 +97,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the password has at least one upper case character" in {
        val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "abc123!" )
     
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", passwordError)
@@ -105,7 +106,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the password has at least one digit" in {
        val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "abcabc!" )
     
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", passwordError)
@@ -114,7 +115,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "check the password has at least one special character" in {
        val requestBodyF = Json.obj( "email" -> "a@a.a", "password" -> "abc123" )
     
-       val requestF = new FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+       val requestF = FakeRequest(POST, "/api/signup", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
            body =  requestBodyF )
        val result = route(app, requestF).get
        checkKo(result, "signup", passwordError)
@@ -126,7 +127,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "login a user" in {
       val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "Aa123_4567" )
       
-      val request = new FakeRequest(POST, "/api/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+      val request = FakeRequest(POST, "/api/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
           body =  requestBody )
       
        
@@ -148,7 +149,7 @@ class AuthSpec extends PlaySpec with OneAppPerSuite {
      "refuse a bad password" in {
        val requestBody = Json.obj( "email" -> "a@a.a", "password" -> "b" )
       
-      val request = new FakeRequest(POST, "/api/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
+      val request = FakeRequest(POST, "/api/login", headers = FakeHeaders(Seq("Content-Type" -> "application/json")),
           body =  requestBody )
       
        

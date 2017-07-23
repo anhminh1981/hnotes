@@ -8,21 +8,19 @@ import play.api.test.Helpers._
 import play.api.mvc.Headers
 import play.api.libs.json.Json
 import play.api.db.slick.DatabaseConfigProvider
-import slick.profile.BasicProfile
+import slick.basic.BasicProfile
 import models.User
 import org.mockito.internal.matchers.GreaterThan
 import com.github.t3hnar.bcrypt.Password
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
-class UserDaoSpec extends PlaySpec with OneAppPerSuite {
-  object dbConfigProvider extends DatabaseConfigProvider {
-    def get[P <: BasicProfile] = DatabaseConfigProvider.get
-  }
+class UserDaoSpec extends PlaySpec with GuiceOneAppPerSuite {
   
   "UserDao" should {
     "insert a user" in {
-      val userDao = new UserDao(dbConfigProvider)
+      val userDao = app.injector.instanceOf[UserDao]
       val newUser = userDao.insert(User(0, "a@a.a", "a", "user"))
       newUser.map { user =>
         user.isSuccess must be 
@@ -33,7 +31,7 @@ class UserDaoSpec extends PlaySpec with OneAppPerSuite {
   }
   
     "not insert a user twice" in {
-      val userDao = new UserDao(dbConfigProvider)
+      val userDao = app.injector.instanceOf[UserDao]
       val newUser = userDao.insert(User(0, "a@a.a", "a", "user"))
       newUser.map { user => 
         user.isFailure must be

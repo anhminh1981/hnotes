@@ -1,33 +1,41 @@
 package controllers
 
-import scala.concurrent.ExecutionContext.Implicits._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
 
 import org.joda.time.DateTimeUtils
-import org.mockito.Mockito._
-import org.mockito.ArgumentMatchers._
-import org.scalatest.mock.MockitoSugar
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.atLeastOnce
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.when
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.test.Helpers._
 
+import com.github.t3hnar.bcrypt.Password
+
+import akka.stream.Materializer
 import dao.UserDao
+import dao.exception.InsertDuplicateException
 import models.User
 import play.api.Configuration
-import scala.concurrent._
-import play.api.test._
-import play.api.mvc.Headers
-import play.api.libs.json.JsString
-import play.api.libs.json.Json
-import scala.concurrent.duration._
-import scala.util.Success
-import scala.util.Failure
-import org.scalatest.BeforeAndAfterEach
-import com.github.t3hnar.bcrypt._
 import play.api.Environment
-import java.util.NoSuchElementException
-import dao.exception.InsertDuplicateException
+import play.api.libs.json.Json
+import play.api.mvc.Headers
+import play.api.test.FakeRequest
+import play.api.test.Helpers.OK
+import play.api.test.Helpers.POST
+import play.api.test.Helpers.contentAsJson
+import play.api.test.Helpers.defaultAwaitTimeout
+import play.api.test.Helpers.status
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
+import play.api.mvc.ControllerComponents
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 
-class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach {
+class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with BeforeAndAfterEach {
   // default values
   val email = "test@test.test"
   val password = "Aa123_4567"
@@ -38,15 +46,20 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
   
   private implicit val configuration = mock[Configuration]
   private implicit val env = mock[Environment]
+  private implicit val mat = mock[Materializer]
   
+  private val components = app.injector.instanceOf[ControllerComponents]
   
   private var userDao = null: UserDao
   private var controller = null: AuthController
   
   override def beforeEach() = { 
-    when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
+    when(configuration.getOptional[String]("play.crypto.secret")) thenReturn Some(secret)
     userDao = mock[UserDao]
     controller = new AuthController(userDao)
+    
+    controller.setControllerComponents( components )
+    
   }
   
   "createToken" must { 
@@ -66,11 +79,11 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       // Result
       token must equal(s"$header.$claim.$signature")
-      verify(configuration, atLeastOnce()).getString("play.crypto.secret")
+      verify(configuration, atLeastOnce()).getOptional[String]("play.crypto.secret")
     }
     
     "throw an exception if the secret's not configured" in {
-      when(configuration.getString("play.crypto.secret")) thenReturn None
+      when(configuration.getOptional[String]("play.crypto.secret")) thenReturn None
       an [IllegalStateException] must be thrownBy controller.createToken(user) 
     }
   }
@@ -79,7 +92,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     
     "need an email" in { 
       val requestBody = Json.obj( "password" -> password )
-      val request = new FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       
@@ -94,7 +107,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     
     
     "register a new user" in { 
-    	when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
+    	when(configuration.getOptional[String]("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
     	when(userDao.insert(any[User])) thenReturn Future.successful(Success(user))
@@ -104,7 +117,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       
       
-      val request = new FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.signup().apply(request)
@@ -125,7 +138,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
       
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
-      val request = new FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/signup", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
       
       val result = controller.signup().apply(request)
@@ -147,7 +160,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     
     "need an email" in { 
       val requestBody = Json.obj( "password" -> password )
-      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       
@@ -161,13 +174,13 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "login if the email/password pair is correct" in { 
-      when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
+      when(configuration.getOptional[String]("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user)) 
     	
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
-      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.login().apply(request)
@@ -185,13 +198,13 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "check the email's existence" in {
-      when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
+      when(configuration.getOptional[String]("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(None) 
     	
       val requestBody = Json.obj( "email" -> email, "password" -> password )
       
-      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.login().apply(request)
@@ -207,13 +220,13 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar with BeforeAndAfterE
     }
     
     "check the password" in {
-      when(configuration.getString("play.crypto.secret")) thenReturn Some(secret)
+      when(configuration.getOptional[String]("play.crypto.secret")) thenReturn Some(secret)
 
     	when(userDao.selectByEmail(email)) thenReturn Future.successful(Some(user)) 
     	
       val requestBody = Json.obj( "email" -> email, "password" -> "not_password" )
       
-      val request = new FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
+      val request = FakeRequest(POST, "/api/login", headers = Headers("Content-Type" -> "application/json"),
           body =  requestBody )
   
       val result = controller.login().apply(request)
