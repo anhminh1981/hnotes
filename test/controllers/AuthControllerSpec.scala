@@ -130,7 +130,7 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoS
       (json \ "request").asOpt[String] mustBe Some( "signup" )
     	(json \ "cause").asOpt[String] mustBe None
       (json \ "status").asOpt[String] mustBe Some("OK")
-      (json \ "token").as[String] mustNot be(empty)
+      (json \ "user" \ "token").as[String] mustNot be(empty)
     }
     
     "not register a user twice" in { 

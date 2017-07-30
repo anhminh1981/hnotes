@@ -87,7 +87,7 @@ class AuthController @Inject() (userDao: UserDao)  (implicit val configuration: 
     } else {
     		  val newUser = userDao.insert(User(0, email, password, "user"))
     		  newUser map { _ match {
-    		    case Success(user2) => Ok(signupSuccess + ("token" -> JsString(createToken(user2))) + ("user" -> Json.toJson(user2)))
+    		    case Success(user2) => Ok(signupSuccess  + ("user" -> (Json.toJson(user2).as[JsObject] + ("token" -> JsString(createToken(user2)))    )))
     		    case Failure(InsertDuplicateException(_, _, _)) => Ok(signupFailure + ("cause" -> JsString("email already registered")))
     		    case Failure(e) => InternalServerError(signupFailure)
     		  } 

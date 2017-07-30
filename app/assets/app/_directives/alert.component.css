@@ -1,0 +1,9 @@
+alert-danger {
+  font-weight: bold;
+  color: red;
+}
+
+alert-success {
+  font-weight: bold;
+  color: green;
+}

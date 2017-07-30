@@ -31,7 +31,7 @@ class AuthSpec extends PlaySpec with GuiceOneAppPerSuite {
      
     (json \ "request").asOpt[String] mustBe Some( method )
   	((json \ "status").asOpt[String], (json \ "cause").asOpt[String]) mustBe (Some("OK"), None)
-    (json \ "token").asOpt[String].getOrElse("") mustNot be(empty)
+    (json \ "user" \ "token").asOpt[String].getOrElse("") mustNot be(empty)
   }
   
   
