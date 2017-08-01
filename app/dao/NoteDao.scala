@@ -17,11 +17,6 @@ import scala.concurrent.ExecutionContext
 class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit val ec: ExecutionContext) extends HasDatabaseConfigProvider[JdbcProfile]{
   import profile.api._
   
-  implicit def dateTime  =
-        MappedColumnType.base[DateTime, Timestamp](
-          dt => new Timestamp(dt.getMillis),
-          ts => new DateTime(ts.getTime)
-    )
   
   private val Notes = TableQuery[NotesTable]
   
@@ -43,7 +38,7 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   
   def update(id: Long, title: String, text: String): Future[Int] = {
     val query = for(n <- Notes if n.id === id) yield (n.title, n.text, n.modifiedAt)
-    val updateAction = query.update((title, text, Instant.now().toDateTime()))
+    val updateAction = query.update((title, text, new Timestamp(Instant.now().getMillis)))
     db.run(updateAction)
   }
   
@@ -59,8 +54,8 @@ class NoteDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     def title = column[String]("TITLE")
     def text = column[String]("TEXT")
     def data = column[Array[Byte]]("DATA")
-    def createdAt = column[DateTime]("CREATEDAT")
-    def modifiedAt = column[DateTime]("MODIFIEDAT")
+    def createdAt = column[Timestamp]("CREATEDAT")
+    def modifiedAt = column[Timestamp]("MODIFIEDAT")
     
     def * = (id, owner, typeNote, title, text, data, createdAt, modifiedAt) <> (Note.tupled, Note.unapply _)
     

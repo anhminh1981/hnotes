@@ -13,6 +13,7 @@ import scala.concurrent.duration._
 import play.api.Play
 import dao.UserDao
 import scala.concurrent.ExecutionContext
+import java.sql.Timestamp
 
 
 trait TestData {
@@ -20,7 +21,7 @@ trait TestData {
   val userDao = app.injector.instanceOf[UserDao]
   val noteDao = app.injector.instanceOf[NoteDao]
   implicit val ec = app.injector.instanceOf[ExecutionContext] 
-  private val now = Instant.now().toDateTime()
+  private val now = new Timestamp(Instant.now().getMillis)
   
   var noteId1: Long = 0
   var noteId2: Long = 0

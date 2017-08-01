@@ -21,11 +21,15 @@ import play.api.mvc.Result
 import play.api.Logger
 import play.api.Environment
 import akka.stream.Materializer
+import java.sql.Timestamp
+import org.joda.time.Instant
 
 class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Configuration, val env: Environment, val ec: ExecutionContext, val mat: Materializer)
     extends Secured {
   val summaryLength = 20
   val updateSuccess = Json.obj("request" -> "update", "status" -> "OK")
+  val createSuccess = Json.obj("request" -> "create", "status" -> "OK")
+  
   val noteWrites = new Writes[Note] {
     def writes(note: Note) = {
       val encodedData = Base64.getEncoder.encode(note.data)
@@ -36,8 +40,8 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
         "title" -> note.title,
         "text" -> note.text,
         "data" -> encodedData,
-        "createdAt" -> note.createdAt.getMillis,
-        "modifiedAt" -> note.modifiedAt.getMillis)
+        "createdAt" -> note.createdAt.getTime,
+        "modifiedAt" -> note.modifiedAt.getTime)
     }
   }
 
@@ -49,8 +53,8 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
         "type" -> note.typeNote,
         "title" -> (if (note.title.length < summaryLength) note.title else note.title.substring(0, summaryLength) + "..."),
         "text" -> (if (note.text.length < summaryLength) note.text else note.text.substring(0, summaryLength) + "..."),
-        "createdAt" -> note.createdAt.getMillis,
-        "modifiedAt" -> note.modifiedAt.getMillis)
+        "createdAt" -> note.createdAt.getTime,
+        "modifiedAt" -> note.modifiedAt.getTime)
     }
   }
 
@@ -120,10 +124,14 @@ class NoteController @Inject() (noteDao: NoteDao)(implicit val configuration: Co
   def edit = (authenticated andThen NotePostAction andThen PermissionCheckAction).async(parse.json) { implicit request =>
     val body = request.body
 
-    val oldNote = request.item // uselessfor now
+    val oldNote = request.item // useless for now
     val id = oldNote.id
     val title = (body \ "title").asOpt[String]
     val text = (body \ "text").asOpt[String]
     noteDao.update(id, title.getOrElse(""), text.getOrElse("")) map { _ => Ok(updateSuccess + ("id" -> JsNumber(id))) }
+  }
+  
+  def create = authenticated.async(parse.json) { implicit request =>
+    noteDao.insert(Note(0, request.user.id, "text", "", "", null, null, null)) map { id => Ok(createSuccess + ("id" -> JsNumber(id))) }
   }
 }

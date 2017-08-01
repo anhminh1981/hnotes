@@ -12,10 +12,11 @@ import scala.util.Failure
 import play.api.Logger
 import org.joda.time.Instant
 import scala.concurrent.ExecutionContext
+import java.sql.Timestamp
 
 @Singleton
 class DevData @Inject() (userDao: UserDao, noteDao: NoteDao)(implicit val ec: ExecutionContext) {
-  val now = Instant.now().toDateTime()
+  val now = new Timestamp(Instant.now().getMillis)
   val text = """
     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas convallis magna ullamcorper, semper orci sit amet, 
     commodo quam. Ut ornare, dolor tincidunt mollis commodo, lacus est vehicula elit, non dictum nisl elit sit amet erat. 
