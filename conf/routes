@@ -19,5 +19,5 @@ GET		/api/test						controllers.AuthController.test()
 
 GET		/api/notes						controllers.NoteController.notes
 GET		/api/notes/:noteId				controllers.NoteController.note(noteId: Long)
-POST	/api/notes						controllers.NoteController.edit
-
+PUT     /api/notes						controllers.NoteController.edit
+POST    /api/notes                      controllers.NoteController.create

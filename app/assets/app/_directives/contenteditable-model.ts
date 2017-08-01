@@ -4,7 +4,7 @@ import {EventEmitter} from '@angular/core';
 @Directive({
   selector: '[contenteditableModel]',
   host: {
-    '(blur)': 'onBlur()',
+    '(keyup)': 'onBlur()',
   },
 })
 export class ContenteditableModel implements OnChanges {
@@ -17,8 +17,8 @@ export class ContenteditableModel implements OnChanges {
   }
 
   public ngOnChanges(changes: SimpleChanges) {
-    console.log(changes);
-    if (changes.model.isFirstChange()) {
+    console.log('contenteditable change' + JSON.stringify(changes));
+    if (this.elRef.nativeElement.innerText !== this.model) {
       this.refreshView();
     }
   }

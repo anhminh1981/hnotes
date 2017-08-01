@@ -1,0 +1,13 @@
+
+#editor-container {
+	margin-top: 30px;
+	margin-right: 20px;
+}
+
+.cke-editable {
+  background : #FFFFCC;
+}
+
+.cke-bottom {
+	background : #FFFFCC;
+}

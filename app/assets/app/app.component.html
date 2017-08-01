@@ -1,5 +1,11 @@
 <div id="viewport">
-	<nav>
+	<nav [ngClass]="{'deployed' : menuDeployed}">
+		<ul>
+      <label (click)="toggleMenu()"></label>
+
+      <li routerLink="/notes">Notes</li>
+      <li routerLink="/login">Logout</li>
+    </ul>
 	</nav>
 	<alert></alert>
 	<router-outlet></router-outlet>

@@ -1,11 +1,15 @@
 #notes-component {
 	padding-left:250px;
-    position: relative;
+  position: relative;
+}
+
+#notes-component.deployed {
+	padding-left:450px;
 }
 
 #notes-list {
 	position: fixed;
-    top: 0;
+    top: 70px;
     bottom: 0;
     overflow: auto;
     margin-left:-250px; /* "left col (nav + list)" width */

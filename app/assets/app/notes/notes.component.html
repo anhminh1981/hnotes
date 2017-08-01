@@ -1,4 +1,4 @@
-<div id="notes-component">
+<div id="notes-component" [ngClass]="{'deployed' : menuDeployed}">
 	<ul class="notes w3-ul w3-border" id="notes-list">
 	  <li *ngFor="let note of notes" (click)="onSelect(note)"
 	      [class.selected]="note === selectedNote">

@@ -1,37 +1,39 @@
 import { Injectable }    from '@angular/core';
-import { Headers, Http } from '@angular/http';
+import { HttpHeaders, HttpClient } from '@angular/common/http';
 
 import 'rxjs/add/operator/toPromise';
 
 import { Note } from '../_models/note';
 
+interface INotesResponse {
+  notes: Note[];
+}
+
 @Injectable()
 export class NoteService {
 
-  private headers = new Headers({'Content-Type': 'application/json'});
   private notesUrl = 'api/notes';
 
-  constructor(private http: Http) { }
+  constructor(private http: HttpClient) { }
 
   public getNotes(): Promise<Note[]> {
     return this.http
-      .get(this.notesUrl)
+      .get<INotesResponse>(this.notesUrl)
       .toPromise()
-      .then(response => response.json().notes as Note[])
+      .then(response => response.notes as Note[])
       .catch(this.handleError);
   }
 
   public getNote(id: number): Promise<Note> {
     return this.http
-      .get(`${this.notesUrl}/${id}`)
+      .get<Note>(`${this.notesUrl}/${id}`)
       .toPromise()
-      .then(response => response.json() as Note)
       .catch(this.handleError);
   }
 
   public update(note: Note): Promise<Note> {
     return this.http
-      .post(this.notesUrl, JSON.stringify(note), {headers: this.headers})
+      .put(this.notesUrl, note)
       .toPromise()
       .then(() => note)
       .catch(this.handleError);

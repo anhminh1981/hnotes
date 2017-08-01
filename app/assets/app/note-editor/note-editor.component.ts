@@ -6,8 +6,8 @@ import { NoteService } from '../_services/notes.service';
 
 @Component({
   selector: 'note',
-  templateUrl: 'assets/app/note-editor/note-editor.component.html',
-  styleUrls: [ 'assets/app/note-editor/note-editor.component.css' ],
+  templateUrl: './note-editor.component.html',
+  styleUrls: [ './note-editor.component.css' ],
 })
 export class NoteEditorComponent implements OnChanges {
 
@@ -26,7 +26,7 @@ export class NoteEditorComponent implements OnChanges {
   }
 
   public save() {
-    console.log('saving');
+    console.log('saving ' + JSON.stringify(this.note));
     this.noteService.update(this.note);
   }
 }

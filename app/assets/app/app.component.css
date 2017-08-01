@@ -8,28 +8,58 @@ h2 {
   margin-top: 0;
   padding-top: 0;
 }
-nav a {
-  padding: 5px 10px;
-  text-decoration: none;
-  margin-top: 10px;
-  display: inline-block;
-  background-color: #eee;
-  border-radius: 4px;
-}
-nav a:visited, a:link {
-  color: #607D8B;
-}
-nav a:hover {
-  color: #039be5;
-  background-color: #CFD8DC;
-}
-nav a.active {
-  color: #039be5;
+
+nav {
+  margin: 0 auto;
 }
 
+nav ul{
+  list-style:none;
+  margin:0;
+  padding:0;
+  width:200px;
+}
+nav ul li{
+  display:block;
+  padding:5px;
+  border-top:1px solid rgba(255,255,255,.5);
+  transition:all .5s;
+  opacity:0;
+}
+nav ul li:hover{
+  background:#ccc;
+}
+nav ul li:last-child{
+  border-bottom-left-radius:4px;
+  border-bottom-right-radius:4px;
+}
+nav label:before{
+  height:2px;
+  width:20px;
+  background:white;
+  display:inline-block;
+  content:"";
+  box-shadow:0px -5px 0px 0px  white,
+             0px -10px 0px 0px white;
+  margin-right:10px;
+  transition:all .5s;
+  position:relative;
+  opacity:1;
+}
+nav label{
+  display:block;
+  padding:10px;
+  color:white;
+  cursor:pointer;
+}
 
-/*
-Copyright 2016 Google Inc. All Rights Reserved.
-Use of this source code is governed by an MIT-style license that
-can be found in the LICENSE file at http://angular.io/license
-*/
+nav.deployed ul li{
+  margin-top:0;
+  opacity:1;
+}
+nav.deployed label:before{
+  position:relative;
+  right:calc(-160px);
+  opacity:0.7;
+
+}

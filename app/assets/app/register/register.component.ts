@@ -4,8 +4,8 @@ import { Router } from '@angular/router';
 import { AlertService, UserService } from '../_services/index';
 
 @Component({
-    templateUrl: 'assets/app/register/register.component.html',
-    styleUrls: [ 'assets/app/register/register.component.css'],
+    templateUrl: './register.component.html',
+    styleUrls: [ './register.component.css'],
 })
 
 export class RegisterComponent {
